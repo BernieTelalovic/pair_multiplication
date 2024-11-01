@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+setup.py
+pair_multiplication/__init__.py
+pair_multiplication/classes.py
+pair_multiplication/utils.py
+pair_multiplication.egg-info/PKG-INFO
+pair_multiplication.egg-info/SOURCES.txt
+pair_multiplication.egg-info/dependency_links.txt
+pair_multiplication.egg-info/requires.txt
+pair_multiplication.egg-info/top_level.txt
