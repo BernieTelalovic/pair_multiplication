@@ -1,4 +1,5 @@
 # utils.py
+import warnings
 from collections import Counter
 import numpy as np
 import itertools as it
@@ -174,17 +175,37 @@ def is_monotonic_increasing(arr):
     # Result is True only if both rows and columns are monotonic increasing
     return rows_increasing and cols_increasing
 
+def make_2d_array_ones(perm):
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        arr = np.zeros((1,1))
+        if len(perm)>0:
+            arr = np.ones((len(perm),perm[0]))
+            
+            for row in range(len(perm)):
+                
+                arr[row][perm[row]:] = 0*arr[row][perm[row]:]
+            
+        return arr
+
 
 def make_2d_array(perm):
-    
-    arr = np.ones((len(perm),perm[0]))
-    
-    for row in range(len(perm)):
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
         
-        arr[row][perm[row]:] = 0*arr[row][perm[row]:]
-        arr[row][0:perm[row]] = (row+1)*arr[row][0:perm[row]]
-        
-    return arr
+        arr = np.zeros((1,1))
+        if len(perm)>0:
+            arr = np.ones((len(perm),perm[0]))
+            
+            for row in range(len(perm)):
+                
+                arr[row][perm[row]:] = 0*arr[row][perm[row]:]
+                arr[row][0:perm[row]] = (row+1)*arr[row][0:perm[row]]
+            
+        return arr
 
 
 def LR_multiple(permA,permB):
