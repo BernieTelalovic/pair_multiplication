@@ -5,7 +5,7 @@ pair_multiplication is a Python library for working with Young Diagrams and pair
 
 - **YoungDiagram**: A class to create and manipulate Young diagrams.
 - **NullDiagram**<--YoungDiagram: Handles null cases of Young diagrams.
-- **Pair**: Represents a pair of Young diagrams.
+- **Pair**<--YoungDiagram: Represents a pair of Young diagrams.
 - **DirectSum**<--dict: Creates a direct sum of diagrams.
 - **DimensionDirectSum**<--DirectSum: 
 
@@ -224,7 +224,7 @@ ydubr_tensor_ydubr
 
 
 
-$$ 1_{2}\,(4, 2)\oplus1_{3}\,(2, 2, 2)\oplus1_{4}\,(3, 1, 1, 1)\oplus1_{2}\,(3, 3)\oplus1_{4}\,(2, 2, 1, 1)\oplus1_{3}\,(4, 1, 1)\oplus2_{3}\,(3, 2, 1) $$
+$$ 1_{2}\,(4, 2)\oplus1_{3}\,(4, 1, 1)\oplus1_{4}\,(2, 2, 1, 1)\oplus1_{4}\,(3, 1, 1, 1)\oplus2_{3}\,(3, 2, 1)\oplus1_{3}\,(2, 2, 2)\oplus1_{2}\,(3, 3) $$
 
 
 
@@ -238,7 +238,7 @@ ydubr_tensor_ydubr.keys() # this returns dict_keys
 
 
 
-    dict_keys([(4, 2), (2, 2, 2), (3, 1, 1, 1), (3, 3), (2, 2, 1, 1), (4, 1, 1), (3, 2, 1)])
+    dict_keys([(4, 2), (4, 1, 1), (2, 2, 1, 1), (3, 1, 1, 1), (3, 2, 1), (2, 2, 2), (3, 3)])
 
 
 
@@ -252,7 +252,7 @@ ydubr_tensor_ydubr.elements()# this gives a list
 
 
 
-    [(4, 2), (2, 2, 2), (3, 1, 1, 1), (3, 3), (2, 2, 1, 1), (4, 1, 1), (3, 2, 1)]
+    [(4, 2), (4, 1, 1), (2, 2, 1, 1), (3, 1, 1, 1), (3, 2, 1), (2, 2, 2), (3, 3)]
 
 
 
@@ -266,7 +266,7 @@ ydubr_tensor_ydubr.values()
 
 
 
-    dict_values([1, 1, 1, 1, 1, 1, 2])
+    dict_values([1, 1, 1, 1, 2, 1, 1])
 
 
 
@@ -280,7 +280,7 @@ ydubr_tensor_ydubr.multiplicities()
 
 
 
-    [1, 1, 1, 1, 1, 1, 2]
+    [1, 1, 1, 1, 2, 1, 1]
 
 
 
@@ -294,7 +294,7 @@ ydubr_tensor_ydubr.lowest_Nc()
 
 
 
-    [2, 3, 4, 2, 4, 3, 3]
+    [2, 3, 4, 4, 3, 3, 2]
 
 
 
@@ -362,7 +362,7 @@ ydbr_tensor_ydbr
 
 
 
-$$ 1_{4}\,\overline{(3, 1, 1, 1)}\oplus1_{3}\,\overline{(4, 1, 1)}\oplus1_{3}\,\overline{(2, 2, 2)}\oplus1_{4}\,\overline{(2, 2, 1, 1)}\oplus2_{3}\,\overline{(3, 2, 1)}\oplus1_{2}\,\overline{(4, 2)}\oplus1_{2}\,\overline{(3, 3)} $$
+$$ 1_{2}\,\overline{(3, 3)}\oplus2_{3}\,\overline{(3, 2, 1)}\oplus1_{3}\,\overline{(4, 1, 1)}\oplus1_{4}\,\overline{(2, 2, 1, 1)}\oplus1_{4}\,\overline{(3, 1, 1, 1)}\oplus1_{2}\,\overline{(4, 2)}\oplus1_{3}\,\overline{(2, 2, 2)} $$
 
 
 
@@ -441,7 +441,7 @@ barred_tensor_unbarred
 
 
 
-$$ 1_{2}\left(\overline{(2)},(2)\right)\oplus1_{0}\left(\overline{()},()\right)\oplus1_{4}\left(\overline{(1, 1)},(1, 1)\right)\oplus1_{3}\left(\overline{(1, 1)},(2)\right)\oplus2_{2}\left(\overline{(1)},(1)\right)\oplus1_{3}\left(\overline{(2)},(1, 1)\right)\oplus1_{4}\left(\overline{(2, 1)},(2, 1)\right) $$
+$$ 2_{2}\left(\overline{(1)},(1)\right)\oplus1_{4}\left(\overline{(2, 1)},(2, 1)\right)\oplus1_{0}\left(\overline{()},()\right)\oplus1_{3}\left(\overline{(1, 1)},(2)\right)\oplus1_{4}\left(\overline{(1, 1)},(1, 1)\right)\oplus1_{3}\left(\overline{(2)},(1, 1)\right)\oplus1_{2}\left(\overline{(2)},(2)\right) $$
 
 
 
@@ -557,13 +557,17 @@ For an Nc lower than this diagrams lowest Nc, we get a NullDiagram
 
 
 ```python
-pair_from_partitions.evaluate_for_Nc(Nc=5)
+pair_from_partitions.evaluate_for_Nc(Nc=3)
 ```
 
+    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:506: UserWarning: Conjugate not admissible under given Nc.
+      warnings.warn('Conjugate not admissible under given Nc.')
 
 
 
-$$ (4, 3, 2, 1) $$
+
+
+$$ None $$
 
 
 

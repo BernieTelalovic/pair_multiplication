@@ -779,5 +779,8 @@ class DimensionDirectSum(DirectSum):
         
         return np.sum(dims*mults).astype(int)
         
+    def lowest_Nc(self):
+        raise AttributeError("DimensionDirectSum only carries dimension info and cannot recover partitions or lowest Nc.")
+        
     
 
