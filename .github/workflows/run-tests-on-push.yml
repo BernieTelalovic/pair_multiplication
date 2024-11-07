@@ -6,7 +6,7 @@ name: Run Tests on Push
 on:
   push:
     branches:
-      - 'main'  # Run on any branch; change to 'main' if you only want it on the main branch
+      - '**'  # Run on any branch; change to 'main' if you only want it on the main branch
       
   pull_request:
     branches:
@@ -35,5 +35,6 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m unittest discover -s tests -v  # Run unittests in the tests directory
+          coverage run -m unittest discover -s tests
+          coverage report -m
 
