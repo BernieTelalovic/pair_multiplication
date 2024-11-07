@@ -14,7 +14,7 @@ pair_multiplication is a Python library for working with Young Diagrams and pair
 Install the package using `pip`:
 
 ```bash
-pip install pair_multiplication
+pip install git+https://github.com/BernieTelalovic/pair_multiplication.git
 
 ```
 
