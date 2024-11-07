@@ -1,0 +1,39 @@
+# .github/workflows/run-tests-on-push.yml
+
+name: Run Tests on Push
+
+# Trigger the workflow on any push to any branch
+on:
+  push:
+    branches:
+      - 'main'  # Run on any branch; change to 'main' if you only want it on the main branch
+      
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu environment
+    strategy:
+      matrix:
+        python-version: [3.6,3.7,3.8, 3.9, 3.10]  # Test across multiple Python versions
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2  # Check out the repository code
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}  # Use each Python version in the matrix
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[test]  # Install the package with its test dependencies
+
+      - name: Run tests
+        run: |
+          python -m unittest discover -s tests -v  # Run unittests in the tests directory
+

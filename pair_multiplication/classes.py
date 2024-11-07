@@ -5,55 +5,54 @@ import scipy as sp
 from .utils import *
 import itertools as it
 
-class YoungDiagram:
+#######################################################################################################################
+############################################NullDiagram################################################################
+#######################################################################################################################
     
-    def __init__(self, partition, Nc = None, barred:bool = False, weight:int = 1):
+class NullDiagram:
+
+    """
+        Represents a null/inadmissible Young diagram. Returned when trying to evaluate a Young diagram or Pair for an Nc that is too low.
         
-        #if not type(partition) is np.array:
-        #partition=list(np.array([partition]).flatten())
-        #partition=tuple(partition)
+        Attributes:
+            partition: None
+            weight: 0 
+            barred: False
+            
+        Returns 0 for multiplicity and dimension.
+            
+    """
+
+
+    
+    def __init__(self,Nc=None):
         
-        partition = partition_tuplify(partition)
+        self.partition = None
+        self.N0 = 0
+        self.Nc = None
+        self.barred = False
+        self.weight = 0
+
         
-        if len(partition)>1:
-            if not all(i >= j for i, j in zip(partition, partition[1:])):
-                raise ValueError('Not a young diagram.')
+    def multiplicity(self,val):
+        return 0*val
         
-        self.barred = barred
-        self.Nc = Nc
-        N0 = len(partition)
-        
-        if (not Nc is None):
-            if Nc < N0:
-                weight = 0
-                warnings.warn('Young diagram not admissible under given Nc. Weight/multiplicity will be set to 0.')
-            elif Nc==N0:
-                new_perm = tuple(np.trim_zeros(np.array(partition).astype(int)-np.array(partition).astype(int)[-1]))
-                N0 = len(new_perm)
-                partition = new_perm
-                
-        self.N0 = N0 
-        self.weight = weight
-        
-        self.n = sum(partition)
-        
-        self.partition = partition
-        self.word = self.get_word()
-        
-        self.hook_length = self.hook_length()
+    def dimension_Nc(self,Nc=None):
+        return 0
         
     def add_weight(self,added_weight):
         
-        try:
-            check_number = float(added_weight)
-                
-            self.weight += added_weight
-        except Exception as e:
-                print(e)
+        self.weight=0
         
     def __eq__(self,other):
         
         if type(other)==type(self):
+            if (self.Nc == other.Nc) and (self.N0==other.N0) and (self.partition==other.partition) \
+                and (self.barred==other.barred):
+                return True
+            else:
+                return False
+        elif type(other)==YoungDiagram:
             if (self.Nc == other.Nc) and (self.N0==other.N0) and (self.partition==other.partition) \
                 and (self.barred==other.barred):
                 return True
@@ -71,7 +70,6 @@ class YoungDiagram:
             barred_right = r'}'
             
         partition_str = str(self.partition).replace(',)', ')')
-        #display(Math(r"E = mc^2"))
         
         return barred_left+partition_str+barred_right
         
@@ -96,14 +94,6 @@ class YoungDiagram:
 
         return f"$$ {self.get_str()} $$"
         
-    def __copy__(self):
-        
-        return self.deepcopy()
-    
-    def __deepcopy__(self):
-        
-        return YoungDiagram(self.partition, Nc=self.Nc, barred=self.barred, weight = self.weight)
-        
     def __add__(self,other):
         
         if isinstance(other,YoungDiagram):
@@ -121,6 +111,133 @@ class YoungDiagram:
             
     def __radd__(self,other):
         return self+other
+        
+        
+    def __mul__(self, other):
+        
+        return NullDiagram()
+                    
+    def __rmul__(self, other):
+    
+        return self*other
+
+
+
+
+#######################################################################################################################
+############################################YoungDiagram###############################################################
+#######################################################################################################################
+
+
+class YoungDiagram(NullDiagram):
+
+    """
+    A subclass of NullDiagram. Represents a young diagram with labelled with a given partition, 
+        and provides methods to calculate its dimension given a certain Nc, 
+        its representation given a certain Nc and handles multiplication by 
+        other Young diagram objects (barred and unbarred).
+
+        Attributes:
+            partition (tuple): the partition labelling the diagram. Same as the one given in the constructor, or reduced if the longest column is equal to the given Nc, only if an Nc is given in the constructor.
+            N0 (int): the first Nc where this diagram appears. If the given Nc is None, N0 is the number of rows in the diagram.
+            Nc (int or None): the Nc under which the diagram appears. 
+            n (int): the number of boxes in the Young diagram
+            hook_length: the hook length of the Young diagram. Set to None if the diagram is barred.
+            [internal] word (list): a list of complex entries with the real parts labelling the rows and the imaginary parts labelling the coulmns of each box in the diagram. Used for multiplication with other Young diagrams.
+            [internal] weight (int): the multiplicity of the diagram. Used for removing diagram objects from direct sums when they are not admissible under given Nc. 
+            """
+    
+    def __init__(self, partition, Nc = None, barred:bool = False, weight:int = 1):
+        
+        """
+        Constructs a Young diagram from a given partition
+        
+        Parameters:
+            partition (list,tuple): the partition labelling the diagram.
+            Nc (int, default None): the Nc under which the diagram is constructed. If not given, the diagram is constructed independent of Nc.
+            barred (bool, default: False): whether the diagram is barred or not.
+            [internal] weight (int, default 1): the multiplicity of the diagram. Used for removing diagram objects from direct sums when they are not admissible under given Nc. 
+
+        Raises:
+            ValueError: If the given partition is not monotonic decreasing, i.e., does not label a Young diagram.
+
+        """
+        super().__init__()
+        partition = partition_tuplify(partition)
+        
+        if len(partition)>1:
+            if not all(i >= j for i, j in zip(partition, partition[1:])):
+                raise ValueError('Not a young diagram.')
+        
+        
+        N0 = len(partition)
+        
+        if not (Nc is None):
+            if Nc < N0:
+                weight = 0
+                warnings.warn('Young diagram not admissible under given Nc. Weight/multiplicity will be set to 0.')
+                
+                return
+                
+            elif Nc==N0:
+                new_perm = tuple(np.trim_zeros(np.array(partition).astype(int)-np.array(partition).astype(int)[-1]))
+                N0 = len(new_perm)
+                partition = new_perm
+                
+        self.barred = barred
+        self.Nc = Nc
+        self.N0 = N0 
+        self.weight = weight
+        
+        self.n = sum(partition)
+        
+        self.partition = partition
+        self.word = self.get_word()
+        
+        self.hook_length = self.hook_length()
+
+            
+    def _null_me(self):
+        self = NullDiagram()
+        
+    def __eq__(self,other):
+        
+        if type(other)==type(self):
+            if (self.Nc == other.Nc) and (self.N0==other.N0) and (self.partition==other.partition) \
+                and (self.barred==other.barred):
+                return True
+            else:
+                return False
+        elif type(other)==NullDiagram:
+            if (self.Nc == other.Nc) and (self.N0==other.N0) and (self.partition==other.partition) \
+                and (self.barred==other.barred):
+                return True
+            else:
+                return False
+        else:
+            return False
+
+        
+    def add_weight(self,added_weight):
+        
+        try:
+            check_number = float(added_weight)
+                
+            self.weight += added_weight
+        except Exception as e:
+                print(e)
+    
+        
+    def __copy__(self):
+        
+        return self.deepcopy()
+    
+    def __deepcopy__(self):
+        
+        return YoungDiagram(self.partition, Nc=self.Nc, barred=self.barred, weight = self.weight)
+        
+    def __hash__(self):
+        return hash((self.partition,self.N0,self.Nc,self.barred,self.weight))
         
     def __mul__(self, other):
         
@@ -186,8 +303,7 @@ class YoungDiagram:
         new_diag = NullDiagram(Nc)
         
         if Nc < self.N0:
-            warnings.warn('Young diagram pair not admissible under given Nc.'+\
-                           'Returning null diagram.')
+            warnings.warn('Young diagram pair not admissible under given Nc. Returning null diagram.')
             return new_diag
         
         perm = extend_partition(self.partition,Nc)
@@ -202,6 +318,8 @@ class YoungDiagram:
             weight = 1
         
         new_diag = YoungDiagram(new_perm, Nc=Nc, weight=weight, barred = not self.barred)
+        if new_diag.weight == 0:
+            return NullDiagram(Nc=Nc)
         
         return new_diag
                 
@@ -238,7 +356,8 @@ class YoungDiagram:
             
             results_dict = LR_multiple(self.partition,other.partition)
             
-            diag_results = [YoungDiagram(tuple(ky), Nc = Nc, barred = self.barred) for ky in results_dict.keys()]
+            diag_results = [YoungDiagram(tuple(ky), Nc = Nc, barred = self.barred) 
+                            for ky in results_dict.keys()]
             diag_weights = list(results_dict.values())
             
             return DirectSum(diag_results,diag_weights)
@@ -251,10 +370,12 @@ class YoungDiagram:
         if len(self.partition)>0:
 
             word = np.array(list(it.chain(*[[ind+1]*partition[ind] 
-                                    for ind in range(len(partition))])),dtype=complex)
+                                            for ind in range(len(partition))])),
+                                    dtype=complex)
 
             if imaginary:
-                word+= 1j*np.concatenate([np.arange(1,partition[ind]+1) for ind in range(len(partition))])
+                word+= 1j*np.concatenate([np.arange(1,partition[ind]+1) 
+                                          for ind in range(len(partition))])
 
         return word
     
@@ -287,8 +408,8 @@ class YoungDiagram:
         else:
             modarr = make_2d_array_ones(self.partition)
             
-            hook = np.array([[np.sum(modarr[indx,indy:])+np.sum(modarr[indx:,indy])-1 for 
-                            indy in range(len(modarr[0]))]
+            hook = np.array([[np.sum(modarr[indx,indy:])+np.sum(modarr[indx:,indy])-1 
+                            for indy in range(len(modarr[0]))]
                             for indx in range(len(modarr))])
             return np.prod(hook[hook>0])
             
@@ -325,7 +446,9 @@ class YoungDiagram:
         if self.barred:
             return self.conjugate(Nc = Nc)
         else:
-            new_diag = YoungDiagram(self.partition, barred = self.barred,Nc = Nc, weight = self.weight)
+            new_diag = YoungDiagram(self.partition, barred = self.barred, Nc = Nc, weight = self.weight)
+            if new_diag.weight == 0:
+                return NullDiagram(Nc=Nc)
             return new_diag
             
     def pair_with(self,other):
@@ -350,35 +473,31 @@ class YoungDiagram:
                 raise TypeError('I can only be paired with another diagram or a partition.')
         
             
-            
         
-        
-        
-        
-#######################################################################################################################
-############################################NullDiagram################################################################
-#######################################################################################################################
-    
-class NullDiagram(YoungDiagram):
-    
-    def __init__(self,Nc):
-        
-        YoungDiagram.__init__(self,(), Nc = Nc, weight = 0)
-        self.partition = None
-        self.barred = False
-        
-    def multiplicity(self,val):
-        return 0*val
-        
-    def dimension_Nc(self,Nc=None):
-        return 0
-        
+
+
+
 
 #######################################################################################################################
 ##########################################Pair#########################################################################
 #######################################################################################################################
 
 class Pair(YoungDiagram):
+
+    """
+    A subclass of YoungDiagram. Composes a barred and unbarred diagram into a pair.
+
+        Attributes:
+            partition (tuple): the partition labelling the pair in the form ((barred_diagram,unbarred_diagram)). 
+            N0 (int): the first Nc where this diagram appears. If the given Nc is None, N0 is the sum of the number of rows in the barred and unbarred diagram.
+            Nc (int or None): the Nc under which the diagram appears. 
+            [Not used] n (int): the number of boxes in the Young diagram
+            [Not used] hook_length: the hook length of the Young diagram. Set to None if the diagram is barred.
+            [internal] word (list): in the form [word of barred diagram, word of unbarred diagram]
+            [internal] weight (int): the multiplicity of the pair. Used for removing diagram objects from direct sums when they are not admissible under given Nc. 
+    """
+
+
     
     def __init__(self, partition_tuple, Nc = None, weight:int = 1, inherited_N0:int=0):
         
@@ -546,7 +665,9 @@ class DirectSum(dict):
         ky_arr = np.array(keys)
         vl_arr = np.array(values)
         
-        container = np.array([[ky, np.sum(vl_arr[ky_arr==ky])] for ky in list(set(ky_arr))])
+        container = np.array([[ky, np.sum(vl_arr[ky_arr==ky])] 
+                                for ky in list(set(ky_arr)) 
+                                if getattr(ky,'weight',1)>0])
         
         
         # Use the dict constructor to initialize the dictionary with key-value pairs
@@ -641,7 +762,7 @@ class DirectSum(dict):
         if type(other)==DirectSum:
             keys = list(self.keys())+list(other.keys())
             values = list(self.values())+list(other.values())
-            
+            return DirectSum(keys,values)
         elif type(other) in [YoungDiagram,NullDiagram,Pair]:
             
             keys = list(self.keys())
@@ -649,8 +770,10 @@ class DirectSum(dict):
             
             values = list(self.values())
             values.append(other.weight)
-        
-        return DirectSum(keys,values)
+            return DirectSum(keys,values)
+        else:
+            raise NotImplemented
+
         
     def __iadd__(self,other):
     
@@ -659,6 +782,37 @@ class DirectSum(dict):
             
     def __radd__(self,other):
         return self+other
+        
+    def __sub__(self,other):
+        
+        keys = []
+        values = []
+        
+        if type(other)==DirectSum:
+            keys = list(self.keys())+list(other.keys())
+            values = list(self.values())+list(-1*np.array(other.values()))
+            return DirectSum(keys,values)
+        elif type(other) in [YoungDiagram,NullDiagram,Pair]:
+            
+            keys = list(self.keys())
+            keys.append(other)
+            
+            values = list(self.values())
+            values.append(-1*other.weight)
+            
+            return DirectSum(keys,values)
+        else:
+            raise NotImplemented
+            
+        
+        
+    def __rsub__(self,other):
+        return self-other
+        
+    def __isub__(self,other):
+    
+        added = self-other
+        self = added
     
     def set_N0(self,val):
         
