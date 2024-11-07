@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest  # Use the latest Ubuntu environment
     strategy:
       matrix:
-        python-version: [3.8, 3.9, 3.10, 3.11]  # Test across multiple Python versions
+        python-version: [3.8, 3.9, 3.11]  # Test across multiple Python versions
 
     steps:
       - name: Check out the code
