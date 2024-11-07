@@ -10,6 +10,17 @@ class TestDirectSum(unittest.TestCase):
         self.expected_partitions_Nc3 = []
         self.expected_dimensions_Nc3 = []
         
+    def test_incorrect_constructor(self):
+
+        with self.assertRaises(ValueError) as context:
+            to_simplify = DirectSum([YoungDiagram((3,1),barred=True),
+                                 YoungDiagram((2,1,1),barred=True),
+                                 YoungDiagram((2,1,1),barred=True)],
+                                [1])
+        
+        self.assertEqual(str(context.exception), 'List of diagrams must have a corresponding list of multiplicities.', 
+                        "Incorrect error message during inadmissible construction.")
+        
     def test_correct_constructor_simplification(self):
 
         to_simplify = DirectSum([YoungDiagram((3,1),barred=True),
@@ -41,3 +52,48 @@ class TestDirectSum(unittest.TestCase):
                              
         self.assertEqual(initial+YoungDiagram((2,1,1),barred=True), expected, 
                         "Diagram cannot be added.")
+                        
+    def test_subtraction_by_diagram(self):
+    
+        initial = DirectSum([YoungDiagram((3,1),barred=True),YoungDiagram((2,1,1),barred=True)],
+                             [1,2])
+        expected = DirectSum([YoungDiagram((3,1),barred=True),YoungDiagram((2,1,1),barred=True)],
+                             [1,1])
+                             
+        self.assertEqual(initial-YoungDiagram((2,1,1),barred=True), expected, 
+                        "Diagram cannot be added.")
+                        
+                        
+    def test_direct_sum_dimension(self):
+
+        ds = YoungDiagram((2,1))*YoungDiagram((2,1))
+        dim = ds.dimension_Nc(3)
+        expected_multiplicities = sorted([2, 1, 2, 1])
+        expected_elements = sorted([8, 1, 10, 27])
+        
+        self.assertEqual(sorted(dim.multiplicities()), expected_multiplicities, 
+                        "Incorrect dimensional multiplicities.")
+        self.assertEqual(sorted(dim.elements()), expected_elements, 
+                        "Incorrect dimensional elements.")
+                        
+    def test_direct_sum_dimension(self):
+    
+        yd = YoungDiagram((2,1))
+        ds = yd*yd
+        dim = ds.dimension_Nc(3)
+        expected_sum = 64
+        
+        self.assertEqual(dim.sum(), expected_sum, 
+                        "Incorrect dimensional sum.")
+                        
+                        
+    def test_evaluating_under_Nc3(self):
+    
+        yd = YoungDiagram((2,1))
+        ds = yd*yd
+        
+        expected_ds = DirectSum([YoungDiagram((),Nc=3), YoungDiagram((3),Nc=3), YoungDiagram((3,3),Nc=3),
+                                 YoungDiagram((4,2),Nc=3),YoungDiagram((2,1),Nc=3)],
+                                [1,1,1,1,2])
+        self.assertEqual(ds.evaluate_for_Nc(3), expected_ds, 
+                        "Incorrect direct sum evaluation.")

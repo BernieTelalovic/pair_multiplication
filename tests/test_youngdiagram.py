@@ -63,6 +63,14 @@ class TestYoungDiagram(unittest.TestCase):
                         "Diagram construction failed for evaluated Nc.")
         self.assertEqual(yd_nc1, expected, 
                         "Diagram construction failed for given Nc.")
+                        
+                        
+    def test_dimension_is_correct(self):
+    
+        yd = YoungDiagram((2,1))
+        
+        self.assertEqual(yd.dimension_Nc(3), 8, 
+                        "Incorrect dimension for Nc=3.")
                     
                         
     def test_multiply_with_null_diagram(self):
