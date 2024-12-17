@@ -48,12 +48,12 @@ yd = YoungDiagram((1,2,3)) # this is supposed to give an error, don't worry
     ----> 1 yd = YoungDiagram((1,2,3))
 
 
-    File ~/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:170, in YoungDiagram.__init__(self, partition, Nc, barred, weight)
-        168 if len(partition)>1:
-        169     if not all(i >= j for i, j in zip(partition, partition[1:])):
-    --> 170         raise ValueError('Not a young diagram.')
-        173 N0 = len(partition)
-        175 if not (Nc is None):
+    File ~/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:283, in YoungDiagram.__init__(self, partition, Nc, barred, weight, inherited_N0)
+        281 if len(partition)>1:
+        282     if not all(i >= j for i, j in zip(partition, partition[1:])):
+    --> 283         raise ValueError('Not a young diagram.')
+        286 N0 = len(partition)
+        288 if not (Nc is None):
 
 
     ValueError: Not a young diagram.
@@ -211,7 +211,7 @@ yd_unbarred = YoungDiagram((2,1))
 
 
 ```python
-ydubr_tensor_ydubr = yd_unbarred*yd_unbarred
+ydubr_tensor_ydubr = yd_unbarred.LR_multiply(yd_unbarred)
 ```
 
 The resulting object is a DirectSum class, which displays the direct (tensor) sum of YoungDiagram objects. The DirectSum class is a type of python dict, with keys being the YoungDiagram/Pair (more on these below) objects, and the values corresponding to the multiplicities. In the display, the constants are the multiplicities and their subscripts are the first Nc where this pair labels a young diagram.
@@ -224,7 +224,7 @@ ydubr_tensor_ydubr
 
 
 
-$$ 1_{4}\,(2, 2, 1, 1)\oplus1_{3}\,(4, 1, 1)\oplus1_{2}\,(3, 3)\oplus1_{3}\,(2, 2, 2)\oplus1_{4}\,(3, 1, 1, 1)\oplus2_{3}\,(3, 2, 1)\oplus1_{2}\,(4, 2) $$
+$$ 1_{2}\,(4, 2)\oplus1_{2}\,(3, 3)\oplus2_{3}\,(3, 2, 1)\oplus1_{3}\,(4, 1, 1)\oplus1_{3}\,(2, 2, 2)\oplus1_{4}\,(3, 1, 1, 1)\oplus1_{4}\,(2, 2, 1, 1) $$
 
 
 
@@ -238,7 +238,7 @@ ydubr_tensor_ydubr.keys() # this returns dict_keys
 
 
 
-    dict_keys([(2, 2, 1, 1), (4, 1, 1), (3, 3), (2, 2, 2), (3, 1, 1, 1), (3, 2, 1), (4, 2)])
+    dict_keys([(3, 3), (4, 1, 1), (4, 2), (2, 2, 1, 1), (3, 2, 1), (2, 2, 2), (3, 1, 1, 1)])
 
 
 
@@ -252,7 +252,7 @@ ydubr_tensor_ydubr.elements()# this gives a list
 
 
 
-    [(2, 2, 1, 1), (4, 1, 1), (3, 3), (2, 2, 2), (3, 1, 1, 1), (3, 2, 1), (4, 2)]
+    [(3, 3), (4, 1, 1), (4, 2), (2, 2, 1, 1), (3, 2, 1), (2, 2, 2), (3, 1, 1, 1)]
 
 
 
@@ -266,7 +266,7 @@ ydubr_tensor_ydubr.values()
 
 
 
-    dict_values([1, 1, 1, 1, 1, 2, 1])
+    dict_values([1, 1, 1, 1, 2, 1, 1])
 
 
 
@@ -280,7 +280,7 @@ ydubr_tensor_ydubr.multiplicities()
 
 
 
-    [1, 1, 1, 1, 1, 2, 1]
+    [1, 1, 1, 1, 2, 1, 1]
 
 
 
@@ -294,7 +294,7 @@ ydubr_tensor_ydubr.lowest_Nc()
 
 
 
-    [4, 3, 2, 3, 4, 3, 2]
+    [2, 3, 2, 4, 3, 3, 4]
 
 
 
@@ -314,7 +314,7 @@ ydubr_tensor_ydubr_nc3
 
 
 
-$$ 1_{1}\,(3)\oplus1_{2}\,(3, 3)\oplus1_{0}\,()\oplus1_{2}\,(4, 2)\oplus2_{2}\,(2, 1) $$
+$$ 1_{0}\,()\oplus1_{1}\,(3)\oplus2_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(3, 3) $$
 
 
 
@@ -362,7 +362,7 @@ ydbr_tensor_ydbr
 
 
 
-$$ 1_{3}\,\overline{(4, 1, 1)}\oplus1_{2}\,\overline{(3, 3)}\oplus1_{4}\,\overline{(3, 1, 1, 1)}\oplus1_{4}\,\overline{(2, 2, 1, 1)}\oplus1_{3}\,\overline{(2, 2, 2)}\oplus2_{3}\,\overline{(3, 2, 1)}\oplus1_{2}\,\overline{(4, 2)} $$
+$$ 1_{2}\,\overline{(4, 2)}\oplus1_{2}\,\overline{(3, 3)}\oplus1_{3}\,\overline{(2, 2, 2)}\oplus1_{3}\,\overline{(4, 1, 1)}\oplus2_{3}\,\overline{(3, 2, 1)}\oplus1_{4}\,\overline{(2, 2, 1, 1)}\oplus1_{4}\,\overline{(3, 1, 1, 1)} $$
 
 
 
@@ -381,7 +381,7 @@ ydbr_tensor_ydbr_nc3
 
 
 
-$$ 1_{1}\,(3)\oplus1_{2}\,(3, 3)\oplus1_{0}\,()\oplus1_{2}\,(4, 2)\oplus2_{2}\,(2, 1) $$
+$$ 1_{0}\,()\oplus1_{1}\,(3)\oplus2_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(3, 3) $$
 
 
 
@@ -406,8 +406,8 @@ we can also get the dimensions directly (this time specifying the Nc)
 ydbr_tensor_ydbr.dimension_Nc(Nc=Nc)
 ```
 
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:306: UserWarning: Young diagram pair not admissible under given Nc. Returning null diagram.
-      warnings.warn('Young diagram pair not admissible under given Nc. Returning null diagram.')
+    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:857: UserWarning: Conjugate not admissible under given Nc.
+      warnings.warn('Conjugate not admissible under given Nc.')
 
 
 
@@ -426,7 +426,7 @@ We do the multiplication using King's Q rule for diagram multiplication
 yd_barred = YoungDiagram((2,1),barred = True)
 yd_unbarred = YoungDiagram((2,1))
 
-barred_tensor_unbarred = yd_barred*yd_unbarred
+barred_tensor_unbarred = yd_barred.LR_multiply(yd_unbarred)
 ```
 
 The results is a DirectSum of Pair objects, where the first partition is always the barred diagram, the second is always the unbarred diagram.
@@ -439,7 +439,7 @@ barred_tensor_unbarred
 
 
 
-$$ 1_{4}\left(\overline{(2, 1)},(2, 1)\right)\oplus1_{4}\left(\overline{(1, 1)},(1, 1)\right)\oplus1_{2}\left(\overline{(2)},(2)\right)\oplus1_{3}\left(\overline{(2)},(1, 1)\right)\oplus1_{3}\left(\overline{(1, 1)},(2)\right)\oplus2_{2}\left(\overline{(1)},(1)\right)\oplus1_{0}\left(\overline{()},()\right) $$
+$$ 1_{2}\,()\oplus2_{2}\,\left(\overline{(1)},(1)\right)\oplus1_{2}\,\left(\overline{(2)},(2)\right)\oplus1_{3}\,\left(\overline{(2)},(1, 1)\right)\oplus1_{3}\,\left(\overline{(1, 1)},(2)\right)\oplus1_{4}\,\left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4}\,\left(\overline{(2, 1)},(2, 1)\right) $$
 
 
 
@@ -449,10 +449,6 @@ To construct a pair we can either give a tuple of partitions (the first one is a
 ```python
 pair_from_partitions = Pair(((2,1),(2,1)))
 ```
-
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:504: UserWarning: Class Pair under construction. Proceed with caution!
-      warnings.warn('Class Pair under construction. Proceed with caution!')
-
 
 The multiple of 1 next to it stores the lowest Nc as its subscript
 
@@ -464,7 +460,7 @@ pair_from_partitions
 
 
 
-$$ 1_{4}\left(\overline{(2, 1)},(2, 1)\right) $$
+$$ 1_{4}\,\left(\overline{(2, 1)},(2, 1)\right) $$
 
 
 
@@ -477,10 +473,6 @@ yd_unbarred = YoungDiagram((2,1))
 
 pair_from_diagrams = Pair((yd_barred,yd_unbarred))
 ```
-
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:504: UserWarning: Class Pair under construction. Proceed with caution!
-      warnings.warn('Class Pair under construction. Proceed with caution!')
-
 
 they're the same:
 
@@ -502,10 +494,6 @@ another way is to pair one Young diagram with either a partition:
 ```python
 pair_from_diag_and_partition = yd_barred.pair_with((2,1))
 ```
-
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:504: UserWarning: Class Pair under construction. Proceed with caution!
-      warnings.warn('Class Pair under construction. Proceed with caution!')
-
 
 (when using this method, the given partition will create a diagram that is unbarred if yd_barred and vice-versa.)
 
@@ -558,7 +546,7 @@ For an Nc lower than this diagrams lowest Nc, we get a NullDiagram
 pair_from_partitions.evaluate_for_Nc(Nc=3)
 ```
 
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:625: UserWarning: Conjugate not admissible under given Nc.
+    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:857: UserWarning: Conjugate not admissible under given Nc.
       warnings.warn('Conjugate not admissible under given Nc.')
 
 
@@ -569,10 +557,77 @@ $$ None $$
 
 
 
+# Myltiplying Young Diagram Pairs
+
+Using the column adding rules
+
+
+```python
+pair1 = Pair(((2,1),(1,1)))
+pair2 = Pair(((1),(1)))
+```
+
+
+```python
+pair_multiple = pair1*pair2
+pair_multiple
+```
+
+
+
+
+$$ 1_{4}\,\left(\overline{(1, 1)},(1)\right)\oplus1_{4}\,\left(\overline{(2)},(1)\right)\oplus1_{4}\,\left(\overline{(2, 1)},(2)\right)\oplus2_{4}\,\left(\overline{(2, 1)},(1, 1)\right)\oplus1_{4}\,\left(\overline{(3)},(1, 1)\right)\oplus1_{4}\,\left(\overline{(3, 1)},(2, 1)\right)\oplus1_{4}\,\left(\overline{(2, 2)},(2, 1)\right)\oplus1_{5}\,\left(\overline{(1, 1, 1)},(1, 1)\right)\oplus1_{5}\,\left(\overline{(2, 1)},(1, 1)\right)\oplus1_{5}\,\left(\overline{(2, 2)},(1, 1, 1)\right)\oplus1_{5}\,\left(\overline{(3, 1)},(1, 1, 1)\right)\oplus1_{5}\,\left(\overline{(2, 1, 1)},(2, 1)\right)\oplus1_{6}\,\left(\overline{(2, 1, 1)},(1, 1, 1)\right) $$
+
+
+
+
+```python
+lowest_nc = min(pair_multiple.lowest_Nc())
+lowest_nc = 6
+```
+
+
+```python
+pair_multiple.evaluate_for_Nc(lowest_nc) == pair1.evaluate_for_Nc(lowest_nc)*pair2.evaluate_for_Nc(lowest_nc)
+```
+
+    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:385: UserWarning: Diagram multiplication performed under specific Nc.
+      warnings.warn('Diagram multiplication performed under specific Nc.')
+    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:789: UserWarning: Diagram multiplication performed under specific Nc.
+      warnings.warn('Diagram multiplication performed under specific Nc.')
+
+
+
+
+
+    True
+
+
+
+
+```python
+pair_multiple.evaluate_for_Nc(lowest_nc) ==\
+pair1.evaluate_for_Nc(lowest_nc).LR_multiply(pair2.evaluate_for_Nc(lowest_nc))
+```
+
+    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:631: UserWarning: Diagram multiplication performed under specific Nc.
+      warnings.warn('Diagram multiplication performed under specific Nc.')
+
+
+
+
+
+    True
+
+
+
 ## Coming soon:
 
- - pair multiplication with diagram (in progress)
- - pair-pair multiplication (when I figure out how)
  - better handling of diagram multiplicities
  - better documentation and testing
  - more Latexing functions!
+
+
+```python
+
+```

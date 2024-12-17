@@ -108,6 +108,42 @@ class TestYoungDiagram(unittest.TestCase):
         
         self.assertEqual(yd1*yd2, expected, 
                         "Multiplying by barred and unbarred diagrams is incorrect.")
+         
+    def test_LR_compare_with_CA_unbarred_unbarred(self):
+        yd_barred = YoungDiagram((2,1),barred = False)
+        yd_unbarred = YoungDiagram((2,1),barred = False)
+        
+        barred_tensor_unbarred_LR = yd_barred.LR_multiply(yd_unbarred)
+        barred_tensor_unbarred_CA = yd_barred*yd_unbarred
+        
+        self.assertEqual(barred_tensor_unbarred_CA, barred_tensor_unbarred_LR, 
+                        "Multiplying unbarred diags with CA =/= LR.")
+         
+    def test_LR_compare_with_CA_barred_barred(self):
+        yd_barred = YoungDiagram((2,1),barred = True)
+        yd_unbarred = YoungDiagram((2,1),barred = True)
+        
+        barred_tensor_unbarred_LR = yd_barred.LR_multiply(yd_unbarred)
+        barred_tensor_unbarred_CA = yd_barred*yd_unbarred
+        
+        self.assertEqual(barred_tensor_unbarred_CA, barred_tensor_unbarred_LR, 
+                        "Multiplying barred diags with CA =/= LR.")
+                        
+    def test_LR_compare_with_CA_barred_unbarred(self):
+        yd_barred = YoungDiagram((2,1),barred = True)
+        yd_unbarred = YoungDiagram((2,1))
+        
+        barred_tensor_unbarred_LR = yd_barred.LR_multiply(yd_unbarred)
+        barred_tensor_unbarred_CA = yd_barred*yd_unbarred
+        
+        self.assertEqual(barred_tensor_unbarred_CA, barred_tensor_unbarred_LR, 
+                        "Multiplying barred and unbarred diags with CA =/= LR.")
+                        
+                        
+                        
+                        
+    
+        
                         
                         
                         
