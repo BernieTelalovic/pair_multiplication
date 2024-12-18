@@ -382,7 +382,7 @@ class YoungDiagram(NullDiagram):
 
             elif type(NcA)==int and type(NcB)==int:
                 Nc = NcA
-                warnings.warn('Diagram multiplication performed under specific Nc.')
+                #warnings.warn('Diagram multiplication performed under specific Nc.')
         except exception as e:
             pass
         
@@ -403,7 +403,7 @@ class YoungDiagram(NullDiagram):
                 oth_pair = other.pair_with(YoungDiagram((), barred = not other.barred),Nc = Nc)
                 
                 mul = oth_pair*sl_pair
-                if not (Nc is None):
+                if (not Nc is None):
                     mul = mul.evaluate_for_Nc(Nc)
                 
                 return mul
@@ -628,7 +628,7 @@ class YoungDiagram(NullDiagram):
 
             elif type(NcA)==int and type(NcB)==int:
                 Nc = NcA
-                warnings.warn('Diagram multiplication performed under specific Nc.')
+                #warnings.warn('Diagram multiplication performed under specific Nc.')
         except Exception as e:
             pass
     
@@ -774,7 +774,7 @@ class Pair(YoungDiagram):
         return f"$$ {self.get_str()} $$"
         
     def __mul__(self, other):
-    
+        
         Nc = None
         try:
             NcA = self.Nc
@@ -786,7 +786,7 @@ class Pair(YoungDiagram):
 
             elif type(NcA)==int and type(NcB)==int:
                 Nc = NcA
-                warnings.warn('Diagram multiplication performed under specific Nc.')
+                #warnings.warn('Diagram multiplication performed under specific Nc.')
         except exception as e:
             pass
         finally:
@@ -869,7 +869,8 @@ class Pair(YoungDiagram):
         if np.all(diagB_conj_partition[0:len(permA_original)] == np.max(diagB_conj_partition)):
             
             new_perm = tuple(diagB_conj_partition.astype(int)+permA.astype(int))
-            return YoungDiagram(new_perm,weight=self.weight, Nc=Nc, barred=False)
+            diag = YoungDiagram(new_perm,weight=self.weight, Nc=Nc, barred=False)
+            return diag
         
         else:
             warnings.warn('Conjugate not admissible under given Nc.')

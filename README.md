@@ -238,7 +238,7 @@ ydubr_tensor_ydubr.keys() # this returns dict_keys
 
 
 
-    dict_keys([(3, 3), (4, 1, 1), (4, 2), (2, 2, 1, 1), (3, 2, 1), (2, 2, 2), (3, 1, 1, 1)])
+    dict_keys([(3, 3), (2, 2, 1, 1), (4, 1, 1), (3, 2, 1), (4, 2), (2, 2, 2), (3, 1, 1, 1)])
 
 
 
@@ -252,7 +252,7 @@ ydubr_tensor_ydubr.elements()# this gives a list
 
 
 
-    [(3, 3), (4, 1, 1), (4, 2), (2, 2, 1, 1), (3, 2, 1), (2, 2, 2), (3, 1, 1, 1)]
+    [(3, 3), (2, 2, 1, 1), (4, 1, 1), (3, 2, 1), (4, 2), (2, 2, 2), (3, 1, 1, 1)]
 
 
 
@@ -266,7 +266,7 @@ ydubr_tensor_ydubr.values()
 
 
 
-    dict_values([1, 1, 1, 1, 2, 1, 1])
+    dict_values([1, 1, 1, 2, 1, 1, 1])
 
 
 
@@ -280,7 +280,7 @@ ydubr_tensor_ydubr.multiplicities()
 
 
 
-    [1, 1, 1, 1, 2, 1, 1]
+    [1, 1, 1, 2, 1, 1, 1]
 
 
 
@@ -294,7 +294,7 @@ ydubr_tensor_ydubr.lowest_Nc()
 
 
 
-    [2, 3, 2, 4, 3, 3, 4]
+    [2, 4, 3, 3, 2, 3, 4]
 
 
 
@@ -362,7 +362,7 @@ ydbr_tensor_ydbr
 
 
 
-$$ 1_{2}\,\overline{(4, 2)}\oplus1_{2}\,\overline{(3, 3)}\oplus1_{3}\,\overline{(2, 2, 2)}\oplus1_{3}\,\overline{(4, 1, 1)}\oplus2_{3}\,\overline{(3, 2, 1)}\oplus1_{4}\,\overline{(2, 2, 1, 1)}\oplus1_{4}\,\overline{(3, 1, 1, 1)} $$
+$$ 1_{2}\,\overline{(4, 2)}\oplus1_{2}\,\overline{(3, 3)}\oplus1_{3}\,\overline{(2, 2, 2)}\oplus2_{3}\,\overline{(3, 2, 1)}\oplus1_{3}\,\overline{(4, 1, 1)}\oplus1_{4}\,\overline{(3, 1, 1, 1)}\oplus1_{4}\,\overline{(2, 2, 1, 1)} $$
 
 
 
@@ -406,6 +406,8 @@ we can also get the dimensions directly (this time specifying the Nc)
 ydbr_tensor_ydbr.dimension_Nc(Nc=Nc)
 ```
 
+    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:857: UserWarning: Conjugate not admissible under given Nc.
+      warnings.warn('Conjugate not admissible under given Nc.')
     /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:857: UserWarning: Conjugate not admissible under given Nc.
       warnings.warn('Conjugate not admissible under given Nc.')
 
@@ -559,43 +561,39 @@ $$ None $$
 
 # Myltiplying Young Diagram Pairs
 
-Using the column adding rules
+This is done using a column LR algorithm (see accompanying paper (in progress)). This rule currently handles all Young diagram multiplication using Python's magic method, as each Young diagram or barred diagram can be expressed as a pair.
+
+Let's create some pairs
 
 
 ```python
-pair1 = Pair(((2,1),(1,1)))
+pair1 = Pair(((1,1),(2)))
 pair2 = Pair(((1),(1)))
 ```
 
+then multiply them $P_1\otimes P_2$:
+
 
 ```python
-pair_multiple = pair1*pair2
-pair_multiple
+p1_times_p2 = pair1*pair2
+p1_times_p2
 ```
 
 
 
 
-$$ 1_{4}\,\left(\overline{(1, 1)},(1)\right)\oplus1_{4}\,\left(\overline{(2)},(1)\right)\oplus1_{4}\,\left(\overline{(2, 1)},(2)\right)\oplus2_{4}\,\left(\overline{(2, 1)},(1, 1)\right)\oplus1_{4}\,\left(\overline{(3)},(1, 1)\right)\oplus1_{4}\,\left(\overline{(3, 1)},(2, 1)\right)\oplus1_{4}\,\left(\overline{(2, 2)},(2, 1)\right)\oplus1_{5}\,\left(\overline{(1, 1, 1)},(1, 1)\right)\oplus1_{5}\,\left(\overline{(2, 1)},(1, 1)\right)\oplus1_{5}\,\left(\overline{(2, 2)},(1, 1, 1)\right)\oplus1_{5}\,\left(\overline{(3, 1)},(1, 1, 1)\right)\oplus1_{5}\,\left(\overline{(2, 1, 1)},(2, 1)\right)\oplus1_{6}\,\left(\overline{(2, 1, 1)},(1, 1, 1)\right) $$
+$$ 1_{3}\,\left(\overline{(1)},(1)\right)\oplus1_{3}\,\left(\overline{(2)},(2)\right)\oplus1_{3}\,\left(\overline{(1, 1)},(2)\right)\oplus1_{3}\,\left(\overline{(2, 1)},(3)\right)\oplus1_{4}\,\left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4}\,\left(\overline{(1, 1)},(2)\right)\oplus1_{4}\,\left(\overline{(2, 1)},(2, 1)\right)\oplus1_{4}\,\left(\overline{(1, 1, 1)},(3)\right)\oplus1_{5}\,\left(\overline{(1, 1, 1)},(2, 1)\right) $$
 
 
 
-
-```python
-lowest_nc = min(pair_multiple.lowest_Nc())
-lowest_nc = 6
-```
+multiplying $P_2\otimes P_1$ should give the same answer:
 
 
 ```python
-pair_multiple.evaluate_for_Nc(lowest_nc) == pair1.evaluate_for_Nc(lowest_nc)*pair2.evaluate_for_Nc(lowest_nc)
+p2_times_p1 = pair1*pair2
+
+p1_times_p2 == p2_times_p1
 ```
-
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:385: UserWarning: Diagram multiplication performed under specific Nc.
-      warnings.warn('Diagram multiplication performed under specific Nc.')
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:789: UserWarning: Diagram multiplication performed under specific Nc.
-      warnings.warn('Diagram multiplication performed under specific Nc.')
-
 
 
 
@@ -604,25 +602,87 @@ pair_multiple.evaluate_for_Nc(lowest_nc) == pair1.evaluate_for_Nc(lowest_nc)*pai
 
 
 
+We can find the lowest $N_c$ for which each representation is admissible:
+
 
 ```python
-pair_multiple.evaluate_for_Nc(lowest_nc) ==\
-pair1.evaluate_for_Nc(lowest_nc).LR_multiply(pair2.evaluate_for_Nc(lowest_nc))
+lowest_nc = p1_times_p2.lowest_Nc()
+lowest_nc
 ```
 
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:631: UserWarning: Diagram multiplication performed under specific Nc.
-      warnings.warn('Diagram multiplication performed under specific Nc.')
 
+
+
+    [5, 4, 6, 4, 4, 4, 4, 5, 5, 4, 4, 5, 5]
+
+
+
+Let's pick an $N_c$ and test the tensor multiplication:
+
+
+```python
+Nc = min(lowest_nc)
+```
+
+Then we can check if the tensor multiple is the same when we multiply pairs and then evaluate the $N_c$, vs. first evaluating each pair for the given $N_c$ and then multiplying their results. 
+
+In this case, we use the same multiplication algorithm (column LR):
+
+
+```python
+p1_times_p2.evaluate_for_Nc(Nc) == pair1.evaluate_for_Nc(Nc)*pair2.evaluate_for_Nc(Nc)
+```
 
 
 
 
     True
 
+
+
+Now we check if the tensor multiple is the same when comparing it with the implemented LR algorithm:
+
+
+```python
+p1_times_p2.evaluate_for_Nc(Nc) ==\
+pair1.evaluate_for_Nc(Nc).LR_multiply(pair2.evaluate_for_Nc(Nc))
+```
+
+
+
+
+    True
+
+
+
+In fact, we can check this for all of the $N_c$ where new diagrams first appear:
+
+
+```python
+for nc in list(set(lowest_nc)):
+    statement = 'Nc='+str(nc)+': '
+    passing = True
+    if p1_times_p2.evaluate_for_Nc(nc) != pair1.evaluate_for_Nc(nc)*pair2.evaluate_for_Nc(nc):
+        passing = False
+        statement +='Multiplication comparison failed!'
+    if p1_times_p2.evaluate_for_Nc(nc) ==\
+           pair1.evaluate_for_Nc(nc).LR_multiply(pair2.evaluate_for_Nc(nc)):
+        if passing:
+            statement +='Correct!'
+    else:
+        statement +='LR comparison failed!'
+    print(statement)
+```
+
+    Nc=4: Correct!
+    Nc=5: Correct!
+    Nc=6: Correct!
 
 
 ## Coming soon:
 
+ - ordering elements in the direct sum in a readable way (better than this)
+ - algorithm speed-up for higher numbers of boxes
  - better handling of diagram multiplicities
  - better documentation and testing
  - more Latexing functions!
