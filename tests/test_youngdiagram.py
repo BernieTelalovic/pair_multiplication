@@ -81,6 +81,25 @@ class TestYoungDiagram(unittest.TestCase):
         self.assertEqual(diag*null, null, 
                         "Multiplying by null diagram does not return null diagram.")
                         
+    def test_LR_multiply_with_empty(self):
+    
+        yd1 = YoungDiagram((2))
+        yd2 = YoungDiagram(())
+        expected = DirectSum([YoungDiagram((2))],[1])
+        
+        self.assertEqual(yd1.LR_multiply(yd2), expected, 
+                        "Multiplying by singlet is incorrect.")
+        self.assertEqual(yd2.LR_multiply(yd1), expected, 
+                        "Multiplying by singlet is incorrect.")
+                        
+    def test_LR_multiply_two_unbarred_diags(self):
+    
+        yd1 = YoungDiagram((2))
+        yd2 = YoungDiagram((1,1))
+        expected = DirectSum([YoungDiagram((3,1)),YoungDiagram((2,1,1))],[1,1])
+        
+        self.assertEqual(yd1.LR_multiply(yd2), expected, 
+                        "Multiplying by unbarred diagrams is incorrect.")          
                         
     def test_multiply_two_unbarred_diags(self):
     
@@ -110,8 +129,8 @@ class TestYoungDiagram(unittest.TestCase):
                         "Multiplying by barred and unbarred diagrams is incorrect.")
          
     def test_LR_compare_with_CA_unbarred_unbarred(self):
-        yd_barred = YoungDiagram((2,1),barred = False)
-        yd_unbarred = YoungDiagram((2,1),barred = False)
+        yd_barred = YoungDiagram((1,1),barred = False)
+        yd_unbarred = YoungDiagram((2),barred = False)
         
         barred_tensor_unbarred_LR = yd_barred.LR_multiply(yd_unbarred)
         barred_tensor_unbarred_CA = yd_barred*yd_unbarred
@@ -130,8 +149,8 @@ class TestYoungDiagram(unittest.TestCase):
                         "Multiplying barred diags with CA =/= LR.")
                         
     def test_LR_compare_with_CA_barred_unbarred(self):
-        yd_barred = YoungDiagram((2,1),barred = True)
-        yd_unbarred = YoungDiagram((2,1))
+        yd_barred = YoungDiagram((2),barred = True)
+        yd_unbarred = YoungDiagram((1,1))
         
         barred_tensor_unbarred_LR = yd_barred.LR_multiply(yd_unbarred)
         barred_tensor_unbarred_CA = yd_barred*yd_unbarred

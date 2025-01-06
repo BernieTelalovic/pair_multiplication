@@ -64,7 +64,7 @@ class TestDirectSum(unittest.TestCase):
                         "Diagram cannot be added.")
                         
                         
-    def test_direct_sum_dimension(self):
+    def test_direct_sum_multiplicities(self):
 
         ds = YoungDiagram((2,1))*YoungDiagram((2,1))
         dim = ds.dimension_Nc(3)

@@ -9,6 +9,8 @@ pair_multiplication is a Python library for working with Young Diagrams and pair
 - **DirectSum** inherits from *dict*: Creates a direct sum of diagrams.
 - **DimensionDirectSum** inherits from *DirectSum*: Useful for quickly showing the dimensions and multiplicities of a direct sum
 
+The multiplication methods have been successfully numerically tested for all partitions generating diagram pairs up to 8 boxes in total (4 boxes in barred and 4 boxes in unbarred diagrams).
+
 ## Installation
 
 Install the package using `pip`:
@@ -48,12 +50,12 @@ yd = YoungDiagram((1,2,3)) # this is supposed to give an error, don't worry
     ----> 1 yd = YoungDiagram((1,2,3))
 
 
-    File ~/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:283, in YoungDiagram.__init__(self, partition, Nc, barred, weight, inherited_N0)
-        281 if len(partition)>1:
-        282     if not all(i >= j for i, j in zip(partition, partition[1:])):
-    --> 283         raise ValueError('Not a young diagram.')
-        286 N0 = len(partition)
-        288 if not (Nc is None):
+    File ~/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:305, in YoungDiagram.__init__(self, partition, Nc, barred, weight, inherited_N0)
+        303     self.width = partition[0]
+        304     if not all(i >= j for i, j in zip(partition, partition[1:])):
+    --> 305         raise ValueError('Not a young diagram.')
+        306 elif len(partition) > 0:
+        307     self.width = partition[0]
 
 
     ValueError: Not a young diagram.
@@ -224,7 +226,27 @@ ydubr_tensor_ydubr
 
 
 
-$$ 1_{2}\,(4, 2)\oplus1_{2}\,(3, 3)\oplus2_{3}\,(3, 2, 1)\oplus1_{3}\,(4, 1, 1)\oplus1_{3}\,(2, 2, 2)\oplus1_{4}\,(3, 1, 1, 1)\oplus1_{4}\,(2, 2, 1, 1) $$
+\[\begin{array}{c}1_{2}\,(3, 3)\oplus1_{2}\,(4, 2)\oplus
+
+2_{3}\,(3, 2, 1)\oplus1_{3}\,(2, 2, 2)\oplus1_{3}\,(4, 1, 1)\oplus
+
+1_{4}\,(3, 1, 1, 1)\oplus1_{4}\,(2, 2, 1, 1)\end{array}\]
+
+
+
+
+```python
+yd_unbarred*yd_unbarred
+```
+
+
+
+
+\[\begin{array}{c}1_{2} (3, 3)\oplus1_{2} (4, 2)\oplus
+
+1_{3} (2, 2, 2)\oplus2_{3} (3, 2, 1)\oplus1_{3} (4, 1, 1)\oplus
+
+1_{4} (2, 2, 1, 1)\oplus1_{4} (3, 1, 1, 1)\end{array}\]
 
 
 
@@ -238,7 +260,7 @@ ydubr_tensor_ydubr.keys() # this returns dict_keys
 
 
 
-    dict_keys([(3, 3), (2, 2, 1, 1), (4, 1, 1), (3, 2, 1), (4, 2), (2, 2, 2), (3, 1, 1, 1)])
+    dict_keys([(4, 1, 1), (2, 2, 2), (2, 2, 1, 1), (4, 2), (3, 3), (3, 1, 1, 1), (3, 2, 1)])
 
 
 
@@ -252,7 +274,7 @@ ydubr_tensor_ydubr.elements()# this gives a list
 
 
 
-    [(3, 3), (2, 2, 1, 1), (4, 1, 1), (3, 2, 1), (4, 2), (2, 2, 2), (3, 1, 1, 1)]
+    [(4, 1, 1), (2, 2, 2), (2, 2, 1, 1), (4, 2), (3, 3), (3, 1, 1, 1), (3, 2, 1)]
 
 
 
@@ -266,7 +288,7 @@ ydubr_tensor_ydubr.values()
 
 
 
-    dict_values([1, 1, 1, 2, 1, 1, 1])
+    dict_values([1, 1, 1, 1, 1, 1, 2])
 
 
 
@@ -280,7 +302,7 @@ ydubr_tensor_ydubr.multiplicities()
 
 
 
-    [1, 1, 1, 2, 1, 1, 1]
+    [1, 1, 1, 1, 1, 1, 2]
 
 
 
@@ -294,7 +316,7 @@ ydubr_tensor_ydubr.lowest_Nc()
 
 
 
-    [2, 4, 3, 3, 2, 3, 4]
+    [3, 3, 4, 2, 2, 4, 3]
 
 
 
@@ -314,7 +336,11 @@ ydubr_tensor_ydubr_nc3
 
 
 
-$$ 1_{0}\,()\oplus1_{1}\,(3)\oplus2_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(3, 3) $$
+\[\begin{array}{c}1_{0}\,()\oplus
+
+1_{1}\,(3)\oplus
+
+2_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(3, 3)\end{array}\]
 
 
 
@@ -362,7 +388,11 @@ ydbr_tensor_ydbr
 
 
 
-$$ 1_{2}\,\overline{(4, 2)}\oplus1_{2}\,\overline{(3, 3)}\oplus1_{3}\,\overline{(2, 2, 2)}\oplus2_{3}\,\overline{(3, 2, 1)}\oplus1_{3}\,\overline{(4, 1, 1)}\oplus1_{4}\,\overline{(3, 1, 1, 1)}\oplus1_{4}\,\overline{(2, 2, 1, 1)} $$
+\[\begin{array}{c}1_{2} \overline{(3, 3)}\oplus1_{2} \overline{(4, 2)}\oplus
+
+1_{3} \overline{(2, 2, 2)}\oplus2_{3} \overline{(3, 2, 1)}\oplus1_{3} \overline{(4, 1, 1)}\oplus
+
+1_{4} \overline{(2, 2, 1, 1)}\oplus1_{4} \overline{(3, 1, 1, 1)}\end{array}\]
 
 
 
@@ -381,7 +411,11 @@ ydbr_tensor_ydbr_nc3
 
 
 
-$$ 1_{0}\,()\oplus1_{1}\,(3)\oplus2_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(3, 3) $$
+\[\begin{array}{c}1_{0}\,()\oplus
+
+1_{1}\,(3)\oplus
+
+2_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(3, 3)\end{array}\]
 
 
 
@@ -405,12 +439,6 @@ we can also get the dimensions directly (this time specifying the Nc)
 ```python
 ydbr_tensor_ydbr.dimension_Nc(Nc=Nc)
 ```
-
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:857: UserWarning: Conjugate not admissible under given Nc.
-      warnings.warn('Conjugate not admissible under given Nc.')
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:857: UserWarning: Conjugate not admissible under given Nc.
-      warnings.warn('Conjugate not admissible under given Nc.')
-
 
 
 
@@ -441,7 +469,11 @@ barred_tensor_unbarred
 
 
 
-$$ 1_{2}\,()\oplus2_{2}\,\left(\overline{(1)},(1)\right)\oplus1_{2}\,\left(\overline{(2)},(2)\right)\oplus1_{3}\,\left(\overline{(2)},(1, 1)\right)\oplus1_{3}\,\left(\overline{(1, 1)},(2)\right)\oplus1_{4}\,\left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4}\,\left(\overline{(2, 1)},(2, 1)\right) $$
+\[\begin{array}{c}1_{2} ()\oplus2_{2} \left(\overline{(1)},(1)\right)\oplus1_{2} \left(\overline{(2)},(2)\right)\oplus
+
+1_{3} \left(\overline{(2)},(1, 1)\right)\oplus1_{3} \left(\overline{(1, 1)},(2)\right)\oplus
+
+1_{4} \left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4} \left(\overline{(2, 1)},(2, 1)\right)\end{array}\]
 
 
 
@@ -462,7 +494,7 @@ pair_from_partitions
 
 
 
-$$ 1_{4}\,\left(\overline{(2, 1)},(2, 1)\right) $$
+$$ 1_{4} \left(\overline{(2, 1)},(2, 1)\right) $$
 
 
 
@@ -548,10 +580,6 @@ For an Nc lower than this diagrams lowest Nc, we get a NullDiagram
 pair_from_partitions.evaluate_for_Nc(Nc=3)
 ```
 
-    /home/anduril/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:857: UserWarning: Conjugate not admissible under given Nc.
-      warnings.warn('Conjugate not admissible under given Nc.')
-
-
 
 
 
@@ -582,7 +610,11 @@ p1_times_p2
 
 
 
-$$ 1_{3}\,\left(\overline{(1)},(1)\right)\oplus1_{3}\,\left(\overline{(2)},(2)\right)\oplus1_{3}\,\left(\overline{(1, 1)},(2)\right)\oplus1_{3}\,\left(\overline{(2, 1)},(3)\right)\oplus1_{4}\,\left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4}\,\left(\overline{(1, 1)},(2)\right)\oplus1_{4}\,\left(\overline{(2, 1)},(2, 1)\right)\oplus1_{4}\,\left(\overline{(1, 1, 1)},(3)\right)\oplus1_{5}\,\left(\overline{(1, 1, 1)},(2, 1)\right) $$
+\[\begin{array}{c}1_{3} \left(\overline{(1)},(1)\right)\oplus1_{3} \left(\overline{(1, 1)},(2)\right)\oplus1_{3} \left(\overline{(2)},(2)\right)\oplus1_{3} \left(\overline{(2, 1)},(3)\right)\oplus
+
+1_{4} \left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4} \left(\overline{(1, 1)},(2)\right)\oplus1_{4} \left(\overline{(2, 1)},(2, 1)\right)\oplus1_{4} \left(\overline{(1, 1, 1)},(3)\right)\oplus
+
+1_{5} \left(\overline{(1, 1, 1)},(2, 1)\right)\end{array}\]
 
 
 
@@ -613,7 +645,7 @@ lowest_nc
 
 
 
-    [5, 4, 6, 4, 4, 4, 4, 5, 5, 4, 4, 5, 5]
+    [4, 3, 4, 5, 3, 4, 4, 3, 3]
 
 
 
@@ -630,7 +662,57 @@ In this case, we use the same multiplication algorithm (column LR):
 
 
 ```python
-p1_times_p2.evaluate_for_Nc(Nc) == pair1.evaluate_for_Nc(Nc)*pair2.evaluate_for_Nc(Nc)
+p1_times_p2.evaluate_for_Nc(Nc)
+```
+
+
+
+
+$$ 1_{1}\,(3)\oplus\,$$ 
+ $$1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1) $$
+
+
+
+
+```python
+(pair2.evaluate_for_Nc(Nc)*pair1.evaluate_for_Nc(Nc)).evaluate_for_Nc(Nc)
+```
+
+
+
+
+$$ 1_{1}\,(3)\oplus\,$$ 
+ $$1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1) $$
+
+
+
+
+```python
+pair1.evaluate_for_Nc(Nc)
+```
+
+
+
+
+$$ (3) $$
+
+
+
+
+```python
+pair2.evaluate_for_Nc(Nc)
+```
+
+
+
+
+$$ (2, 1) $$
+
+
+
+
+```python
+p1_times_p2.evaluate_for_Nc(Nc) == (pair1.evaluate_for_Nc(Nc)*pair2.evaluate_for_Nc(Nc)).evaluate_for_Nc(Nc)
 ```
 
 
@@ -644,8 +726,21 @@ Now we check if the tensor multiple is the same when comparing it with the imple
 
 
 ```python
-p1_times_p2.evaluate_for_Nc(Nc) ==\
 pair1.evaluate_for_Nc(Nc).LR_multiply(pair2.evaluate_for_Nc(Nc))
+```
+
+
+
+
+$$ 1_{1}\,(3)\oplus\,$$ 
+ $$1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1) $$
+
+
+
+
+```python
+p1_times_p2.evaluate_for_Nc(Nc) ==\
+pair1.evaluate_for_Nc(Nc).LR_multiply(pair2.evaluate_for_Nc(Nc)).evaluate_for_Nc(Nc)
 ```
 
 
@@ -674,15 +769,15 @@ for nc in list(set(lowest_nc)):
     print(statement)
 ```
 
+    Nc=3: Correct!
     Nc=4: Correct!
     Nc=5: Correct!
-    Nc=6: Correct!
 
 
 ## Coming soon:
 
- - ordering elements in the direct sum in a readable way (better than this)
- - algorithm speed-up for higher numbers of boxes
+ - ~ordering elements in the direct sum in a readable way~
+ - ~algorithm speed-up for higher numbers of boxes~
  - better handling of diagram multiplicities
  - better documentation and testing
  - more Latexing functions!
