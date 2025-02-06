@@ -18,7 +18,7 @@ class TestDirectSum(unittest.TestCase):
                                  YoungDiagram((2,1,1),barred=True)],
                                 [1])
         
-        self.assertEqual(str(context.exception), 'List of diagrams must have a corresponding list of multiplicities.', 
+        self.assertEqual(str(context.exception), 'List of multiplicities must have equal length to list of diagrams/pairs.', 
                         "Incorrect error message during inadmissible construction.")
         
     def test_correct_constructor_simplification(self):

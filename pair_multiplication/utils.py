@@ -3,6 +3,7 @@ import warnings
 from collections import Counter
 import numpy as np
 import itertools as it
+from .cutils_pair_multiplication import *
 from multiprocessing import Pool
 
 def Nc_positive(Nc:int):
@@ -10,16 +11,6 @@ def Nc_positive(Nc:int):
     Nc = max([Nc,0])
         
     return Nc
-    
-def partition_tuplify(part):
-
-    if not isinstance(part, tuple):
-        if 0==part:
-            return ()
-    
-        part = (part,)
-        
-    return part
 
 def is_monotonic_decreasing(lis):
     if len(lis)>0:
@@ -59,26 +50,6 @@ def is_serial_decreasing_from_its_min(lis):
     else:
         return True
 
-
-def is_subword(lis):
-    
-    counter_lis = list(Counter(lis).values())
-    counter_keys = list(Counter(lis).keys())
-    return is_monotonic_decreasing(counter_lis) and \
-        (sorted(counter_keys) == list(range(1, int(max(counter_keys))+1)))
-
-def is_word(lis):
-    
-    if len(lis)>1:
-        checker = [is_subword(lis[0:indx+1]) for indx in range(len(lis))]
-        return np.all(checker)
-    elif len(lis)==1:
-        if max(lis)<=1:
-            return True
-        else:
-            return False
-    else:
-        return True
 
 def is_column_increasing(lists):
     
@@ -158,7 +129,8 @@ def is_monotonic_increasing_inarray(arr):
 
     # Result is True only if both rows and columns are monotonic increasing
     return rows_increasing and cols_increasing
-
+    
+    
 def make_2d_array_ones(perm):
 
     with warnings.catch_warnings():
@@ -173,7 +145,6 @@ def make_2d_array_ones(perm):
                 arr[row][perm[row]:] = 0*arr[row][perm[row]:]
             
         return arr
-
 
 def make_2d_array_LR(perm):
 
@@ -325,15 +296,6 @@ def extend_partition(perm,new_length):
 #########################################################################################################
 
 
-def col_add(brA,brB):
-    col = 0
-    if len(brA)>0:
-        col += brA[0]
-    if len(brB)>0:
-        col += brB[0]
-        
-    return col
-
 def make_2d_array(perm, column_sort=False, dims = None):
 
     with warnings.catch_warnings():
@@ -363,36 +325,7 @@ def make_2d_array(perm, column_sort=False, dims = None):
         
         return np.array(arr)
     
-def make_pair_array(pair,column_sort = False):
     
-    part_br = pair[0]
-    part_ubr = pair[1]
-
-    arr_ubr = make_2d_array(part_ubr,column_sort=column_sort)
-    arr_br = make_2d_array(part_br,column_sort=column_sort) 
-    
-    return arr_br*-1j,arr_ubr
-    
-def make_candidate_array(pairB,pairA):
-    
-    brB = pairB[0]
-    brA = pairA[0]
-    
-    ubrB = pairB[1]
-    ubrA = pairA[1]
-    
-    rows_br = len(brB)+len(brA)
-    cols_br = col_add(brA,brB)
-    
-    rows_ubr = len(ubrB)+len(ubrA)
-    cols_ubr = col_add(ubrA,ubrB)
-    
-    cols = np.max([cols_br,cols_ubr])
-    
-    arr_ubr = make_2d_array(ubrB,dims = (rows_ubr+rows_br,cols), column_sort=False)
-    arr_br = make_2d_array(brB,dims = (rows_br+rows_ubr,cols), column_sort=False)*-1 
-    
-    return arr_br, arr_ubr
 
 def get_entries_to_add(array,t):
     
@@ -424,14 +357,6 @@ def get_entries_to_remove(array,t):
     else:
         return np.array([])
 
-def in_different_rows(cands):
-    try:
-        cands_kept = np.array([cand for cand in cands if len(list(set(cand[:,0])))==len(cands[0,:,0])
-                      ])
-    
-        return cands_kept
-    except Exception as e:
-        return np.array([[]])
         
 def check_words(u_br,u_nbr,min_n0,return_n0=False):
 
@@ -469,23 +394,6 @@ def check_words(u_br,u_nbr,min_n0,return_n0=False):
     return rtn
 
 
-def check_shape(diag):
-
-    
-    mask = (diag.real!=0) * (diag.imag.astype(np.int64)<=0)
-
-    dig = np.zeros(diag.shape, dtype=np.int64)
-    dig[mask] += 1
-    
-    perm = np.trim_zeros(np.sum(dig,axis = -1).astype(np.int64))
-    
-    if len(perm) > 0:
-    
-        gaps = np.all(np.apply_along_axis(is_monotonic_decreasing,0,dig))
-    
-        return is_monotonic_decreasing(perm)*gaps
-    else:
-        return True
 
 def check_is_diagram(diag, num_entries, val):
     
@@ -523,69 +431,8 @@ def add_column(diag, adding_col, label):
     diag[rows,cols] += label
     
     return diag
-
-
-def columns_align(cbr,cubr):
-
-    c0_cond = np.all((cbr.real!=cubr.imag)[cubr.imag.astype(np.int64)<0])*\
-              np.all((cbr.imag!=cubr.real)[cubr.real.astype(np.int64)>0])*\
-              np.all((abs(cbr.real)!=0.5)*(abs(cubr.real)!=0.5))
-    
-    if c0_cond:
-        c1_cond = ((cubr*1j - cbr).imag)[(cubr.real > 0)*(cbr.imag > 0)]
-
-        c2_cond = (cbr.real - cubr.imag)[(cubr.imag < 0)*(cbr.real < 0)]
         
-        c3_cond = (~((cubr.real != 0)*(cbr.imag == 0)))[(cubr.imag < 0)*(cbr.real < 0)]
-        
-        align = False
-        
-        if len(c1_cond)==len(cbr):
-        
-            align = (np.all(c1_cond.astype(np.int64)>0))*(len(c1_cond)==len(cbr))*np.all((c2_cond.astype(np.int64)>0))
-            
-        elif len(c2_cond)==len(cbr) and np.all(c1_cond>0):
-            align = (np.all(c1_cond.astype(np.int64)>0))*(len(c1_cond)==len(cbr))*np.all((c2_cond.astype(np.int64)>0))+\
-                (np.all((c2_cond.astype(np.int64)>0))*(len(c2_cond)==len(cbr))*np.all(c3_cond))
-        
-        
-        return align
-    else:
-
-        return False
-        
-        
-def get_full_diag(br,ubr,arg_min):
     
-    concd = np.concatenate((np.flip(np.flip(br[0:arg_min],axis = 1),axis =0),ubr[0:arg_min]), axis = 1)
-    
-    return concd
-    
-    
-def check_wording(concd):
-    
-    br_word_array = np.flip(concd,axis = 0)
-    mask_br = (br_word_array.real.astype(np.int64) < 0) + (br_word_array.imag.astype(np.int64) < 0)
-    br_w = br_word_array[mask_br]
-    
-    br_word = np.zeros(len(br_w))
-
-    br_word[br_w.real<0] -= br_w.real[br_w.real<0]
-    br_word[br_w.imag<0] -= br_w.imag[br_w.imag<0]
-    
-    
-    ubr_word_array = np.flip(concd.T,axis = 1)
-    
-    mask_ubr = (ubr_word_array.imag.astype(np.int64) > 0) + (ubr_word_array.real.astype(np.int64) > 0)
-    ubr_w = ubr_word_array[mask_ubr]
-
-    ubr_word = np.zeros(len(ubr_w))
-
-    ubr_word[ubr_w.imag>0] += ubr_w.imag[ubr_w.imag>0]
-    ubr_word[ubr_w.real>0] += ubr_w.real[ubr_w.real>0]
-    
-    rtn = is_word(br_word) and is_word(ubr_word)
-    return rtn
     
 def get_overlap(br,ubr,min_n0):
     
@@ -613,21 +460,6 @@ def get_overlap(br,ubr,min_n0):
     
     return concd
     
-
-
-def remove_combos_with_insufficient_gaps(removal_combos,diag):
-    
-    gaps_br = np.sum((diag.real == -1),axis =-1)
-    
-    recombs = np.array([removal_combos[comb] for comb in range(len(removal_combos))
-        if np.all([(np.sum(gaps_br[0:removal_combos[comb,ind,0]+1]==0) >= len(removal_combos[comb,0:ind+1,0]))
-                   for ind in range(len(removal_combos[comb]))]) 
-                       ], dtype=np.int64)
-    
-    if len(recombs)==0:
-        return np.array([[]], dtype=np.int64)
-    
-    return recombs
     
     
 def count_steps_up(cad,crm, nc_br,nc_ubr):
@@ -644,265 +476,109 @@ def count_steps_up(cad,crm, nc_br,nc_ubr):
     
     return np.max([np.sum(steps)-gaps_br,0])
     
-def unique_permutations_with_N0s_old(diags_br,diags_ubr,n0s):
+################################################ LaTeXing ##############################################################
+########################################################################################################################
 
-    min_n0 = n0s
+
+def fix_name(pair,name):
     
-    mask_ubr = np.array(diags_ubr.real)!=0
-    ubrs = np.zeros(diags_ubr.shape)
-    ubrs[mask_ubr] += 1
+    if not name:
+        name = 'you forgot to name me'
     
-    perms_ubr = np.sum(ubrs,axis = -1)
+    return toCamel(name)
     
-    mask_br = (diags_br.real!=0) * (diags_br.imag.astype(np.int64)==0)
-    brs = np.zeros(diags_br.shape)
-    brs[mask_br] += 1
+def toCamel(s):
+    s = s.replace('_', ' ')
+    ret = ''.join(x for x in s.title() if not x.isspace())     
+    return ret[0].lower() + ret[1:]
     
-    perms_br = np.sum(brs,axis = -1)
+def enumerate_YD(part):
 
-    pairs = []
-    if len(brs) >0:
-        pairs = [(tuple(np.trim_zeros(perms_br[ind]).astype(np.int64)),
-              tuple(np.trim_zeros(perms_ubr[ind]).astype(np.int64)))
-             for ind in range(len(perms_br))]
-
-    return pairs, n0s.astype(int)
+    pair_part = ((),part)
     
-
-def process_iterate_cands_barred_old(args):
+    return enumerate_pair(pair_part)
     
-    col, num_boxes, min_n0, c_br, c_ubr, min_cols_br = args
+def enumerate_YD_barred(part):
 
-    cands_br = []
-    cands_ubr = []
-    n0s = []
-    checking_diags = []
+    pair_part = (part,())
     
-    tmax = min([np.sum(c_ubr.real!=0),num_boxes])
-            
-    for t in range(tmax+1):
-
-        nmint = num_boxes - t
-        where_to_add = get_entries_to_add(c_br,nmint)
-        where_to_remove = get_entries_to_remove(c_ubr,t)
-
-        addition_combos = in_different_rows(np.array(list(it.combinations(where_to_add, nmint))))
-        removal_combos = in_different_rows(np.array(list(it.combinations(where_to_remove, t))))
-
-        for cad in addition_combos:
-
-            nc_br = np.array(c_br,dtype=complex)
-
-            if len(cad) > 0:
-                       
-                nc_br = replace_column(nc_br, cad, -1*col)
-
-            if check_is_diagram(nc_br, nmint, -1*col):
-                        
-                for crm in removal_combos:
-
-                    nc_ubr = np.array(c_ubr,dtype=complex)
-
-                    if len(crm) > 0:
-
-                        nc_ubr = replace_column(nc_ubr,crm, -1j*col)
-
-                    if check_is_diagram(nc_ubr, t, -1j*col):
-                                
-                        if col == min_cols_br:
-                                    
-                            n0, checking_diag,is_word = check_words(nc_br,nc_ubr,min_n0,return_n0=True)
-
-                            if is_word and (not str(checking_diag) in checking_diags):
-                                n0s.append(max(n0,min_n0))
-                                cands_br.append(nc_br)
-                                cands_ubr.append(nc_ubr)
-                                checking_diags.append(str(checking_diag))
-                                        
-                        else:
-                            cands_br.append(nc_br)
-                            cands_ubr.append(nc_ubr)
-                            checking_diags.append(str(t)+str(nc_br)+str(nc_ubr))
-                            n0s.append(0)
-                            
-    return cands_br,cands_ubr,checking_diags, n0s
-
-def process_iterate_cands_unbarred_old(args):
+    return enumerate_pair(pair_part)
     
-    col, num_boxes, min_n0, c_br, c_ubr, max_cols_ubr, len_brb = args
-    cands_br = []
-    cands_ubr = []
-    n0s = []
-    checking_diags = []
+def compose_ytab_from_array(arr):
     
-    tmax = min([np.sum(c_br!=0),num_boxes])
-
-    for t in range(tmax+1):
-
-        nmint = num_boxes - t
-        where_to_add = get_entries_to_add(c_ubr,nmint)
-        where_to_remove = get_entries_to_remove(c_br,t)
-
-        if len(where_to_remove)>0:
-                    
-            where_to_remove = where_to_remove[np.where(where_to_remove[:,1]<len_brb)[0]]
-                
-        addition_combos = in_different_rows(np.array(list(it.combinations(where_to_add, nmint))))
-        removal_combos = in_different_rows(np.array(list(it.combinations(where_to_remove, t))))
-        if col == 1:
-            removal_combos = remove_combos_with_insufficient_gaps(removal_combos,c_br)
-            
-
-        for cad in addition_combos:
-
-            nc_ubr = np.array(c_ubr,dtype=complex)
-
-            if len(cad) > 0:
-                nc_ubr = add_column(nc_ubr, cad, 1*col)
-
-            if check_is_diagram(nc_ubr, nmint, col):
-                        
-                for crm in removal_combos:
-
-                    nc_br = np.array(c_br,dtype=complex)
-
-                    if len(crm) > 0:
-                        nc_br = add_column(nc_br,crm, 1j*col)
-                                
-
-                    if check_is_diagram(nc_br, t, 1j*col):
-      
-                        if col == max_cols_ubr:
-                                    
-                            n0, checking_diag,is_word = check_words(nc_br,nc_ubr,min_n0,return_n0=True)
-                                    
-                            if is_word and (not str(checking_diag) in checking_diags):
-                                n0s.append(max(n0,min_n0))
-                                cands_br.append(nc_br)
-                                cands_ubr.append(nc_ubr)
-                                checking_diags.append(str(checking_diag))
-                                #diag_labels.append(checking_diag)
-
-                                
-                        elif check_words(nc_br,nc_ubr,min_n0):
-                                    
-                            cands_br.append(nc_br)
-                            cands_ubr.append(nc_ubr)
-                            checking_diags.append(str(t)+str(nc_br)+str(nc_ubr))
-                            n0s.append(0)
-                            
-    return cands_br,cands_ubr,checking_diags,n0s
-
-
-def parallel_process_iterate_cands_barred_old(candidates_br,candidates_ubr, num_boxes, min_n0, cols_br, col):
+    rows = []
+    for row in arr:
+        if not np.all(row==r'\none'):
+            rw = '&'.join(row)
+            rows.append(rw+r'\\')
     
-    min_cols_br = np.min(cols_br)
-    args = [[col, num_boxes, min_n0, candidates_br[ind],candidates_ubr[ind], min_cols_br]
-            for ind in range(len(candidates_br))]
+    strin = '\n'.join(rows)
     
-    candidates_br = []
-    candidates_ubr = []
-    n0s = []
-    with Pool(None) as pool:
-        
-        checkers = []
-        for result in pool.imap(process_iterate_cands_barred, args):
-            cands_br,cands_ubr,checker_diags,n0 = result
-            
-            for ind in range(len(checker_diags)):
-                if not checker_diags[ind] in checkers:
-                    checkers.append(checker_diags[ind])
-                    candidates_br.append(cands_br[ind])
-                    candidates_ubr.append(cands_ubr[ind])
-                    n0s.append(n0[ind])
-        
-    return candidates_br,candidates_ubr,n0s
-
-
-def parallel_process_iterate_cands_unbarred_old(candidates_br,candidates_ubr, num_boxes, 
-                                            min_n0, cols_ubr, col, len_brb):
-    
-    max_cols_ubr = max(cols_ubr)
-    args = [[col, num_boxes, min_n0, candidates_br[ind],candidates_ubr[ind], max_cols_ubr, len_brb]
-            for ind in range(len(candidates_br))]
-    
-    candidates_br = []
-    candidates_ubr = []
-    n0s = []
-    
-    with Pool(None) as pool:
-        checkers = []
-        for result in pool.imap(process_iterate_cands_unbarred, args):
-            cands_br,cands_ubr,checker_diags,n0 = result
-            
-            for ind in range(len(checker_diags)):
-                if not checker_diags[ind] in checkers:
-                    checkers.append(checker_diags[ind])
-                    candidates_br.append(cands_br[ind])
-                    candidates_ubr.append(cands_ubr[ind])
-                    n0s.append(n0[ind])
-        
-    return candidates_br,candidates_ubr,n0s
-
-
-
-def pair_multipy_old(pairB,pairA):
-    
-    brA,ubrA = make_pair_array(pairA,column_sort=True)
-    brB,ubrB = make_pair_array(pairB)
-
-    diagC_br, diagC_ubr = make_candidate_array(pairB,pairA)
-    
-    n0s = []
-    min_n0 = max(len(pairA[1])+len(pairA[0]),len(pairB[0])+len(pairB[1]))
-    
-    checking_diags = []
-    candidates_br = np.array([diagC_br])
-
-    candidates_ubr = np.array([diagC_ubr])
-
-    cols_br = np.array(list(set(-brA.imag.astype(int).flatten())))
-    cols_br = np.flip(cols_br[cols_br>0])
-    
-    for col in cols_br:
-
-        num_boxes = np.sum(-brA.imag.astype(int)==col)
-
-        cands_br,cands_ubr,n0s = parallel_process_iterate_cands_barred(candidates_br,
-                                                                   candidates_ubr, 
-                                                                   num_boxes, min_n0, 
-                                                                   cols_br, col)
-                                    
-        candidates_br = np.array(cands_br)
-        candidates_ubr = np.array(cands_ubr)
-    
-
-    cols_ubr = np.array(list(set(ubrA.real.astype(int).flatten())))
-    cols_ubr = cols_ubr[cols_ubr>0]
-
-    if len(cols_ubr)==0:
-        steps_up = np.zeros(len(candidates_br))
-        n0s = np.array(n0s)
+    if len(strin)>0:
+        return r'\begin{ytableau}'+'\n'+strin+'\n'+r'\end{ytableau}'+'\n'
     else:
-        n0s = []
-        checking_diags = []
-        
-    diag_labels = []
+        return ''
     
-    for col in cols_ubr:
-        
-        num_boxes = np.sum(ubrA.real.astype(np.int64)==col)
+def enumerate_pair(pair):
 
-        cands_br = []
-        cands_ubr = []
+    nc_br = int(np.max(pair[0],initial=0))
+    nc_ubr = int(np.max(pair[1],initial=0))
 
-        cands_br,cands_ubr,n0s = parallel_process_iterate_cands_unbarred(candidates_br,
-                                                                   candidates_ubr, 
-                                                                   num_boxes, min_n0, 
-                                                                   cols_ubr, col,len(brB[0]))
+    nr_br = len(pair[0])
+    nr_ubr = len(pair[1])
 
-        candidates_br = np.array(cands_br)
-        candidates_ubr = np.array(cands_ubr)
+    nrows = nr_br+nr_ubr
+    ncols = nc_br+nc_ubr
+
+    barred_left = r'\overline{'
+    barred_right = r'}'
+
+    rev_ubr = np.array(pair[0])[::-1]
+
+    rows = []
+    for r in range(nrows):
         
+        row = []
+        if r < nr_ubr:
+            
+            nones = [r'\none']*nc_br
+            labs = list(np.arange(1,pair[1][r]+1).astype('str'))
+            more_nones = [r'\none']*(nc_ubr-pair[1][r])
+            
+            row = nones+labs+more_nones
+
+            rows.append(row)
+        else:
+            labs = list(np.arange(-rev_ubr[r-nr_ubr],0))
+            
+            nones = [r'\none']*(nc_br-rev_ubr[r-nr_ubr])
+            more_nones = [r'\none']*(nc_ubr)
+            
+            lab_strin = [barred_left+str(abs(lb))+barred_right for lb in labs]
+            
+            row = nones+lab_strin+more_nones
+
+            rows.append(row)
+    
+    return np.array(rows)
+    
+    
+def latex_pair(pair, name=None):
+    
+    name = fix_name(pair,name)
+    
+    ubr = pair[1]
+    br = pair[0]
+    
+    num_ubr_rows = len(ubr)
+    
+    num_br_rows = 0
+    if len(br) > 0:
+        num_br_cols = max(br)
         
-    return unique_permutations_with_N0s(candidates_br,candidates_ubr,np.array(n0s))
+    br_str = '0,'*num_ubr_rows+','.join([f"{num_br_cols-row}+{row}" for row in list(reversed(br))])
+    
+    ubr_str = ','.join([f"{num_br_cols}+{row}" for row in ubr])
+    
+    print(r"\newcommand{"+"\\"+name+"}{\ydiagram"+r"[*(white)\bullet]{"+\
+            br_str+"}*[*(white)]{"+ubr_str+"}}")

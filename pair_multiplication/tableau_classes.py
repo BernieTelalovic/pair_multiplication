@@ -3,6 +3,73 @@ from .cutils_pair_multiplication import *
 import itertools as it
 from multiprocessing import Pool
 
+
+def get_pair_base_labeled(arr):
+    cand_r = arr.real#.astype(str)
+    cand_i = arr.imag.astype(int)
+    
+    cand_r_pos = np.array(cand_r)
+    cand_r_pos[cand_r.astype(int) < 0] = 0
+    
+    mask_none = (cand_r==0.0) + ((cand_i != 0)*(~(cand_r.astype(int)>0)))
+    mask_empty = (cand_r==0.5) + (cand_r.astype(int)>0)
+    mask_bullet = (cand_r==-0.5) + (cand_i < 0)
+
+    string_arr = np.array(cand_r_pos).astype(int).astype(str)
+    string_arr[mask_none] = r'\none'
+    string_arr[mask_empty] = r'\empty'
+    string_arr[mask_bullet] = r'\bullet'
+    
+    return string_arr
+
+
+    
+
+def get_barred_part_marked(arr):
+    
+    cand_i = arr.imag.astype(int)
+    cand_r = arr.real.astype(int)
+    imag_str_arr = cand_i.astype(str)
+    
+    negatives_re = cand_r < 0
+    
+    imag_str_arr[negatives_re] = np.char.add(r'\overline{', (-cand_r).astype(str)[negatives_re])
+    imag_str_arr[negatives_re] = np.char.add(imag_str_arr[negatives_re], '}')
+
+    imag_str_arr[imag_str_arr=='0'] = ''
+    imag_str_arr[imag_str_arr!='0'] = np.char.add(imag_str_arr[imag_str_arr!='0'], '')
+        
+    negatives_im = (np.char.find(imag_str_arr, '-') == 0) * (~negatives_re)
+    imag_str_arr[negatives_im] = np.char.add(r'\overline{', (-cand_i).astype(str)[negatives_im])
+    imag_str_arr[negatives_im] = np.char.add(imag_str_arr[negatives_im], '}i')
+
+    mask = negatives_im + negatives_re
+    
+    return imag_str_arr, mask
+
+
+
+def get_unbarred_part_marked(arr):
+    
+    cand_i = arr.imag.astype(int)
+    cand_r = arr.real.astype(int)
+    
+    imag_str_arr = cand_r.astype(str)
+    
+    positives_re = cand_r > 0
+    
+    imag_str_arr[positives_re] = cand_r.astype(str)[positives_re]
+        
+    positives_im = (cand_i > 0) * (~positives_re)
+    imag_str_arr[positives_im] = cand_i.astype(str)[positives_im]
+    imag_str_arr[positives_im] = np.char.add(imag_str_arr[positives_im], 'i')
+
+    mask = positives_im + positives_re
+    
+    return imag_str_arr, mask
+
+
+
 def process_iterate_cands_barred(args):
     
     col, num_boxes, min_n0, cand_pair, min_cols_br = args
@@ -178,8 +245,47 @@ def pair_multipy(prB,prA):
                                                              cols_ubr, col,len_brb)
     
     return candidates
+    
+    
+    
+def pair_multipy_verbosely(prB,prA):
+    
+    pairA = PairTableau(partitions = prA,column_sort=True,working_pair=False)
+    pairB = PairTableau(partitions = prB, column_sort=True,working_pair=False)
+    len_brb = len(pairB.br.array[0])
+    
+    min_n0 = max(len(prA[1])+len(prA[0]),len(prB[0])+len(prB[1]))
+    
+    candidates = CandidateList(partition_pair = [prB,prA], min_n0 = min_n0)
 
+    cols_br = np.array(list(set(-pairA.br.imag.astype(int).flatten())))
+    
+    cols_br = np.flip(cols_br[cols_br>0])
+    
+    candidates_in_steps = []
+    
+    for col in cols_br:
 
+        num_boxes = np.sum(-pairA.br.imag.astype(int)==col)
+
+        candidates = parallel_process_iterate_cands_barred(candidates, 
+                                                           num_boxes, min_n0, 
+                                                           cols_br, col)
+                                                           
+        candidates_in_steps.append(candidates)
+    
+    cols_ubr = np.array(list(set(pairA.ubr.real.astype(int).flatten())))
+    cols_ubr = cols_ubr[cols_ubr>0]
+    
+    for col in cols_ubr:
+        
+        num_boxes = np.sum(pairA.ubr.real.astype(np.int64)==col)
+
+        candidates = parallel_process_iterate_cands_unbarred(candidates, 
+                                                             num_boxes, min_n0, 
+                                                             cols_ubr, col,len_brb)
+        candidates_in_steps.append(candidates)
+    return candidates_in_steps
 
 
 class Tableau():
@@ -347,6 +453,68 @@ class PairTableau:
         self.admissible = self.admissible_shape * self.admissible_word
         self._hash = hash((self.br,self.ubr, self.n0))
         
+    def string_candidate(self):
+    
+        if not self.composite is None:
+            n0 = self.n0
+            
+            comp = self.composite
+            string_arr = get_pair_base_labeled(comp)
+        
+            barred, mask_br = get_barred_part_marked(comp)
+            unbarred, mask_ubr = get_unbarred_part_marked(comp)
+            
+            num_rows = len(string_arr)
+            label_str = ['']*num_rows
+            
+            append_col = True
+
+            if not np.any((comp.real.astype(int) > 0) + (comp.imag.astype(int) > 0), axis = (0,1)):
+
+                string_arr[mask_br] = barred[mask_br]
+                append_col = False
+            else:
+
+                label_str = np.array([r'\none']*num_rows,dtype='<U21')
+                plus = np.any(barred == r'\overline{1}i', axis = 1)
+                label_str[plus] = np.char.add(label_str[plus],r'[\boxplus]')
+                times = np.any(barred == r'\overline{1}', axis = 1)
+                label_str[times] = np.char.add(label_str[times],r'[\boxtimes]')
+                
+                label_str[((~times)*(~plus))] = np.char.add(label_str[((~times)*(~plus))],r'[\circ]')
+                
+                string_arr[mask_ubr] = unbarred[mask_ubr]
+                
+            selector = np.any(string_arr!=r'\none',axis = 0)
+            string_arr = ((string_arr.T)[selector]).T
+            
+            if append_col:
+                string_arr = np.concatenate((label_str.reshape((num_rows,1)),string_arr),axis = 1)
+                
+            string_arr = np.array([[item.replace('0',r'\bullet') if r'\none[\boxtimes]' in row
+                                    else 
+                                    item.replace('0',r'\none')
+                                    for item in row] for row in string_arr])
+            
+            full_strin = '\\\\\n'.join([r' & '.join(list(row))for row in string_arr])
+                
+            return r'\begin{ytableau}'+'\n'+full_strin+'\n'+r'\end{ytableau}'+'\n'
+        else:
+            return ''
+            
+    def __lt__(self,other):
+    
+        try:
+            if self.n0 < other.n0:
+                return True
+            elif self.n0 == other.no:
+                return len(self.string_candidate()) < len(other.string_candidate())
+            else:
+                return False
+        except Exception as e:
+            return False
+            
+            
     def __hash__(self):
         
         return self._hash
@@ -375,7 +543,7 @@ class PairTableau:
         
         n0_base = len(self.br.get_partition())+len(self.ubr.get_partition())
         
-        concd = get_full_diag(self.br.array,self.ubr.array,max(arg_min,n0_base))
+        concd = get_full_diag(self.br.array,self.ubr.array,max(max(arg_min,n0_base),self.n0))
 
         self.n0 = len(concd.T)
 
@@ -446,8 +614,6 @@ class CandidateList():
     
     def append(self, candidate):
         
-        #candidate = PairTableau(tableau = [item_br, item_ubr], min_n0=n0)
-        
         if candidate not in self.pairs:
             
             self.pairs.append(candidate)
@@ -456,8 +622,7 @@ class CandidateList():
         
     def __add__(self, cands_lis):
         
-        new_cands = [cand for cand in cands_lis if (cand not in self.pairs)]#list(set(cands_lis) - (set(cands_lis) & set(self.pairs)))
-
+        new_cands = [cand for cand in cands_lis if (cand not in self.pairs)]
         self.pairs.extend(new_cands)
         
         self.n0s.extend([cand.n0 for cand in new_cands])
@@ -478,4 +643,10 @@ class CandidateList():
     def get_n0s(self):
         
         return self.n0s
+        
+    def string_list(self):
+    
+        joined = r'\,\oplus\,'.join([self.pairs[ind].string_candidate() 
+                            for ind in range(self.length)]).replace(r'\,\oplus\,\,\oplus',r'\,\oplus')
+        return joined.replace(r'\,\oplus\,', r'\,\oplus\, '+'\n')
     

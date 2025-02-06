@@ -24,6 +24,13 @@ class TestPair(unittest.TestCase):
         
         self.assertEqual(pair.N0, 5, 
                         "Incorrect N0.")
+                        
+    def test_dimension_is_correct(self):
+    
+        pr = Pair(((1),(2,1)))
+        
+        self.assertEqual(pr.dimension_Nc(3), 15, 
+                        "Incorrect dimension for Nc=3.")
         
         
     def test_evaluation_for_Nc3(self):

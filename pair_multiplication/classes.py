@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 import scipy as sp
 from .utils import *
+from .cutils_pair_multiplication import *
 from .tableau_classes import *
 import itertools as it
 
@@ -43,12 +44,7 @@ class NullDiagram:
         return 0*val
         
     def dimension_Nc(self,Nc=None):
-        return 0
-        
-    def add_weight(self,added_weight):
-        
-        self.weight=0
-        
+        return 0        
         
     def get_str(self):
         
@@ -62,7 +58,7 @@ class NullDiagram:
         
         strn = barred_left+partition_str+barred_right
         
-        if len(strn)==0:
+        if self.partition is None:
             strn = '0'
         
         return strn
@@ -74,7 +70,7 @@ class NullDiagram:
             brd='_'
             
         strn = str(self.partition).replace(',)', ')')+brd
-        if len(strn)==0:
+        if self.partition is None:
             strn = '0'
         
         return strn
@@ -120,18 +116,12 @@ class NullDiagram:
     
         if self==other:
         
-            return DirectSum([self],[0])
+            return NullDiagram()#DirectSum([self],[0])
         
-        elif isinstance(other,YoungDiagram) or isinstance(other,Pair):
+        elif isinstance(other,YoungDiagram) or isinstance(other,Pair) or isinstance(other,DirectSum):
         
-            elements = [other]
-            multiplicities = [-other.weight]
-            
-            return DirectSum(elements,multiplicities)
-            
-        elif isinstance(other,DirectSum):
-
             return other
+
         else:
             try:
                 return other+self
@@ -223,6 +213,9 @@ class NullDiagram:
             dex = 0 if other.barred else 1
             return hash(self.pair[dex]) == hash(other) and (self.pair[dex-1].n == 0)
             
+        elif type(other)==DirectSum:
+            equal = DirectSum([self],[self.weight])==other
+            return equal
         else:
             return False
             
@@ -347,19 +340,11 @@ class YoungDiagram(NullDiagram):
             dex = 0 if other.barred else 1
             return hash(self.pair[dex]) == hash(other) and (self.pair[dex-1].n == 0)
             
+        elif type(other)==DirectSum:
+            equal = DirectSum([self],[self.weight])==other
+            return equal
         else:
             return False
-
-        
-    def add_weight(self,added_weight):
-        
-        try:
-            check_number = float(added_weight)
-                
-            self.weight += added_weight
-            
-        except Exception as e:
-                print(e)
     
         
     def __copy__(self):
@@ -419,13 +404,54 @@ class YoungDiagram(NullDiagram):
                 try:
                     check_number = float(other)
 
-                    self.weight *= other
+                    return DirectSum([self], [self.weight*other])
                 except Exception as e:
-                    raise e
+                    raise NotImplemented
                     
     def __rmul__(self, other):
     
         return self*other
+        
+    def __add__(self,other):
+        
+        if isinstance(other,YoungDiagram) or isinstance(other,Pair):
+        
+            elements = [self,other]
+            multiplicities = [self.weight,other.weight]
+            
+            return DirectSum(elements,multiplicities)
+        elif isinstance(other,NullDiagram):
+            return self
+        else:
+            try:
+                return other+self
+            except Exception as e:
+                raise NotImplemented
+
+            
+    def __radd__(self,other):
+        return self+other
+        
+    def __sub__(self,other):
+        
+        if isinstance(other,DirectSum):
+        
+            elements = other.elements()+[self]
+            multiplicities = other.multiplicities()+[-self.weight]
+            
+            return DirectSum(elements,multiplicities)
+        elif isinstance(other,NullDiagram):
+            return self
+        else:
+            if self==other:
+                return NullDiagram()
+            else:
+                raise NotImplemented
+
+            
+    def __rsub__(self,other):
+        return self+other
+        
                 
     def check_Nc(self,ncc, allow_none = False):
         
@@ -672,7 +698,9 @@ class YoungDiagram(NullDiagram):
                 raise e
         
     
-        
+    def as_ydiagram(self):
+        pr = self.pair_with(())
+        return pr._as_inner_ytab()
 
 
 
@@ -856,39 +884,19 @@ class Pair(YoungDiagram):
                 return DirectSum(pair_arr,np.ones(len(pair_arr)))
                 
             elif type(other) is NullDiagram:
-                return DirectSum([NullDiagram()], [0])
+                return NullDiagram()
                                 
             else:
                 try:
                     check_number = float(other)
                     
-                    self.weight *= other
+                    return DirectSum([self], [self.weight*other])
                 except Exception as e:
-                    print(e)
-                    
-                    
+                    raise NotImplemented
+                
                 
     def __rmul__(self, other):
         return self*other
-        
-        
-    def __add__(self,other):
-        
-        if isinstance(other,Pair):
-        
-            elements = [self,other]
-            multiplicities = [self.weight,other.weight]
-            
-            return DirectSum(elements,multiplicities)
-        else:
-            try:
-                return other+self
-            except Exception as e:
-                raise NotImplemented
-
-            
-    def __radd__(self,other):
-        return self+other
                      
                     
     def set_Nc(self, va:int):
@@ -959,6 +967,137 @@ class Pair(YoungDiagram):
         else:
             return self
             
+    def _as_inner_ytab(self):
+    
+        ubr = self.partition[1]
+        br = self.partition[0]
+        
+        if len(ubr)==0 and len(br)==0:
+            return r'\bullet'
+        
+        num_ubr_rows = len(ubr)
+        num_br_cols = 0
+        br_str = ''
+        if len(br) > 0:
+            num_br_cols = max(br)
+            br_str = '0,'*num_ubr_rows+','.join([f"{num_br_cols-row}+{row}" for row in list(reversed(br))])
+        
+        ubr_str = ','.join([f"{num_br_cols}+{row}" for row in ubr])
+        
+        ubr_part = ''
+        br_part = ''
+        if len(ubr_str)>0:
+            ubr_part = "[*(white)]{"+ubr_str+"}"
+        if len(br_str)>0:
+            br_part = r"[*(white)\bullet]{"+br_str+"}"
+            
+        if len(ubr_part)>0 and len(br_part)>0:
+            return "\ydiagram"+br_part+'*'+ubr_part
+        elif len(ubr_part)==0:
+            return "\ydiagram"+br_part
+        elif len(br_part)==0:
+            return "\ydiagram"+ubr_part
+            
+    def as_ydiagram(self):
+        return self._as_inner_ytab()
+           
+    def _as_ytab(self,name = None):
+    
+        name = fix_name(self.partition,name)
+        
+        inner_tab = self._as_inner_ytab()
+        
+        strin = r"\newcommand{"+"\\"+name+"}{"+inner_tab+"}"
+        return strin
+            
+    def print_as_ytab(self,name = None):
+        
+        print(self._as_ytab(name = name))
+        
+        
+    def verbosely_multiply_with(self, other, name = None):
+    
+        name = fix_name(self.partition,name)
+        strin_start = r"\newcommand{"+"\\"+name+"}{\n"
+        strin_end = "}"
+        Nc = None
+        try:
+            NcA = self.Nc
+            NcB = other.Nc
+
+            if not NcA==NcB:
+
+                raise ValueError('The two diagrams must at least have equal Nc.')
+
+            elif type(NcA)==int and type(NcB)==int:
+                Nc = NcA
+                #warnings.warn('Diagram multiplication performed under specific Nc.')
+        except exception as e:
+            pass
+        finally:
+            if type(other) is Pair:
+                    
+                left = r'\left(\ '
+                right = r'\ \right)'
+                
+                other_array = enumerate_pair(other.partition)
+                
+                tot_string = self._as_inner_ytab()+ r'\,\otimes\,'+compose_ytab_from_array(other_array)
+                
+                candidates_in_steps = pair_multipy_verbosely(self.partition,other.partition)
+                
+                for ind in range(len(candidates_in_steps)):
+                
+                    cand_str = candidates_in_steps[ind].string_list()
+                    leftover_arr = compose_ytab_from_array(other_array[:,1+ind:])
+                    if len(leftover_arr)>0:
+                        cand_str = left+cand_str+right+r'\,\otimes\,'+leftover_arr+r'\\'
+                    tot_string += r'&='+cand_str
+                    
+                    if ind < len(candidates_in_steps)-1:
+                        tot_string +='\n'
+                
+                return tot_string
+            
+            elif type(other) is YoungDiagram:
+                
+                oth = other.pair_with(())
+                
+                left = r'\left(\ '
+                right = r'\ \right)'
+                
+                other_array = enumerate_pair(oth.partition)
+                
+                tot_string = self._as_inner_ytab()+ r'\,\otimes\,'+compose_ytab_from_array(other_array)
+                
+                candidates_in_steps = pair_multipy_verbosely(self.partition,oth.partition)
+                
+                for ind in range(len(candidates_in_steps)):
+                
+                    cand_str = candidates_in_steps[ind].string_list()
+                    leftover_arr = compose_ytab_from_array(other_array[:,1+ind:])
+                    if len(leftover_arr)>0:
+                        cand_str = left+cand_str+right+r'\,\otimes\,'+leftover_arr+r'\\'
+                    tot_string += r'&='+cand_str
+                    
+                    if ind < len(candidates_in_steps)-1:
+                        tot_string +='\n'
+                
+                return tot_string
+                
+            elif type(other) is NullDiagram:
+                return('0')
+                                
+            else:
+                try:
+                    check_number = float(other)
+                    
+                    self.weight *= other
+                except Exception as e:
+                    print(e)
+        
+    
+            
             
 #######################################################################################################################
 ##########################################DirectSum####################################################################
@@ -966,24 +1105,77 @@ class Pair(YoungDiagram):
             
             
 class DirectSum(dict):
+
+    def __new__(cls, keys=None, values=None):
+
+        if keys is None:
+            return NullDiagram()
+        else:
+            if len(keys)>0:
+                if isinstance(values,list) or isinstance(values,type(np.array([1]))):
+                    if len(keys)==len(values):
+                        if np.any(np.array(values) > 0):
+                        
+                            ky_arr = np.array(keys)
+                            vl_arr = np.array(values)
+                            
+                            container = np.array([[ky, np.sum(vl_arr[ky_arr==ky])] 
+                                                    for ky in list(set(ky_arr)) 
+                                                    if getattr(ky,'weight',1)!=0 and np.sum(vl_arr[ky_arr==ky])!=0]).T
+                            
+                            if len(container)>0:
+                            
+                                instance = super().__new__(cls) 
+                                instance._keys = container[0]
+                                instance._values = container[1]
+                                return instance 
+                            else:
+                                return NullDiagram()
+                        else:
+                            return NullDiagram()
+                    else:
+                        instance = super().__new__(cls)
+                        instance._keys = []
+                        instance._values = []
+                        
+                        return instance 
+                        
+                else:
+                    
+                    vl_arr = np.ones(len(keys))
+                    ky_arr = np.array(keys)
+                    
+                    container = np.array([[ky, np.sum(vl_arr[ky_arr==ky])] 
+                                            for ky in list(set(ky_arr)) 
+                                            if getattr(ky,'weight',1)!=0 and np.sum(vl_arr[ky_arr==ky])!=0]).T
+                                            
+                    if len(container)>0:
+                    
+                        instance = super().__new__(cls)  # Create an instance of the class
+                        instance._keys = container[0]
+                        instance._values = container[1]
+
+                        return instance 
+                    else:
+                        return NullDiagram()
+            else:
+                return NullDiagram()
+
     
-    def __init__(self, keys, values):
-        # Ensure keys and values are of the same length
-        if len(keys) != len(values):
-            raise ValueError("List of diagrams must have a corresponding list of multiplicities.")
+    def __init__(self, keys=None, values=None):
+
+        if hasattr(self, "_keys") and hasattr(self, "_values"):
         
-        ky_arr = np.array(keys)
-        vl_arr = np.array(values)
+            if len(self._values) == 0:
+                raise ValueError("List of multiplicities must have equal length to list of diagrams/pairs.")
+            else:
+                keys = self._keys
+                values = self._values
+                del self._keys  # Cleanup temporary attributes
+                del self._values
         
-        container = np.array([[ky, np.sum(vl_arr[ky_arr==ky])] 
-                                for ky in list(set(ky_arr)) 
-                                if getattr(ky,'weight',1)>0 and np.sum(vl_arr[ky_arr==ky])!=0])
-        
-        
-        
-        # Use the dict constructor to initialize the dictionary with key-value pairs
-        if len(container.T)>0:
-            super().__init__(zip(container.T[0], container.T[1]))
+        if len(keys)>0:
+            super().__init__(zip(keys,values))
         else:
             super().__init__()
 
@@ -1020,8 +1212,9 @@ class DirectSum(dict):
         
     def dimension_Nc(self,Nc=None):
     
-        elements = [ky.dimension_Nc(Nc) for ky in self.keys()]
-        multiplicities = list(self.values())
+        elements = np.array([ky.dimension_Nc(Nc) for ky in self.elements()])
+        multiplicities = np.array(self.multiplicities())[elements>0]
+        elements = elements[elements>0]
             
         return DimensionDirectSum(elements,multiplicities)
         
@@ -1174,33 +1367,40 @@ class DirectSum(dict):
         warnings.warn('DirectSum multiplication only works with scalars at the moment! Proceed with caution!')
         
         if type(other) is DirectSum:
+            #TODO
+            keys_me = self.elements()
+            keys_other = other.elements()
+            
+            mults_me = self.multiplicities()
+            mults_other = other.multiplicities()
+            
+            container = [(keys_me[mind]*keys_other[ond])*mults_me[mind]*mults_other[ond]
+                         for mind in range(len(keys_me)) for ond in range(len(keys_other))]
+            
+            return np.sum(container)
         
-            return compose_direct_sums()
-        
-        elif type(other) is Pair:
+        elif (type(other) is Pair) or (type(other) is YoungDiagram):
+            keys_me = self.elements()
+            mults_me = self.multiplicities()
             
-            mulA = self.pair*other.pair[0]
+            container = [(keys_me[mind]*other)*mults_me[mind] for mind in range(len(keys_me))]
+            return np.sum(container)
             
-            mulB = self.pair*other.pair[1]
+        elif other==0:
             
-            return mulA+mulB
-        
-        elif type(other) is YoungDiagram:
-            
-            list_pairs = None
-            
-            if other.barred:
-                list_pairs = self.pair[1]*other
-            else:
-                list_pairs = self.pair[0]*other
-                            
+            return NullDiagram
+ 
         else:
             try:
                 check_number = float(other)
                 
-                self.weight *= other
+                values = np.array(self.multiplicities())*other
+                keys = self.elements()
+                
+                return DirectSum(keys,values)
+                
             except Exception as e:
-                print(e)
+                raise NotImplemented
                 
     def __rmul__(self, other):
         return self*other
@@ -1215,14 +1415,25 @@ class DirectSum(dict):
     def __eq__(self,other):
     
         try:
-            if len((self-other).elements())==0:
+            if self-other==0:
                 return True
             else:
                 return False
         except Exception as e:
             return False
         
-          
+    def as_ydiagram(self):
+    
+        elements = np.array(list(self.keys()))
+        inds = elements.argsort()
+        multiplicities = np.array(list(self.values()))[inds]
+        n0s = np.array(self.lowest_Nc())[inds]
+        elements = elements[inds]
+        
+        lis = [str(multiplicities[ind])+r'_{'+str(n0s[ind])+'}\,'+elements[ind].as_ydiagram()
+                for ind in range(len(elements))]
+    
+        return '\,\oplus\,'.join(lis)
 
 
 
@@ -1234,10 +1445,12 @@ class DimensionDirectSum(DirectSum):
         if len(keys) != len(values):
             raise ValueError("List of dimensions must have a corresponding list of multiplicities.")
 
-        ky_arr = np.array(keys)
-        vl_arr = np.array(values)
+        #ky_arr = np.array(keys)
+        #vl_arr = np.array(values)
+        
+        container = np.array([[keys[ind],values[ind]] for ind in range(len(keys)) if keys[ind]>0]).T
 
-        super().__init__(ky_arr[ky_arr>0], vl_arr[ky_arr>0])
+        super().__init__(container[0], container[1])
 
     def get_cmdline_str(self):
         strin = ''
