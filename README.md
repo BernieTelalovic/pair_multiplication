@@ -6,8 +6,8 @@ pair_multiplication is a Python library for working with Young Diagrams and pair
 - **NullDiagram**: Handles null cases of Young diagrams.
 - **YoungDiagram** inherits from *NullDiagram*: A class to create and manipulate Young diagrams.
 - **Pair** inherits from *YoungDiagram*: Represents a pair of Young diagrams.
-- **DirectSum** inherits from *dict*: Creates a direct sum of diagrams.
-- **DimensionDirectSum** inherits from *DirectSum*: Useful for quickly showing the dimensions and multiplicities of a direct sum
+- **DirectSum**: Creates a direct sum of diagrams, indexable like a numpy array.
+- **DimensionDirectSum**: Useful for quickly showing the dimensions and multiplicities of a direct sum
 
 The multiplication methods have been successfully numerically tested for all partitions generating diagram pairs up to 8 boxes in total (4 boxes in barred and 4 boxes in unbarred diagrams).
 
@@ -50,18 +50,18 @@ yd = YoungDiagram((1,2,3)) # this is supposed to give an error, don't worry
     ----> 1 yd = YoungDiagram((1,2,3))
 
 
-    File ~/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:305, in YoungDiagram.__init__(self, partition, Nc, barred, weight, inherited_N0)
-        303     self.width = partition[0]
-        304     if not all(i >= j for i, j in zip(partition, partition[1:])):
-    --> 305         raise ValueError('Not a young diagram.')
-        306 elif len(partition) > 0:
-        307     self.width = partition[0]
+    File ~/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:314, in YoungDiagram.__init__(self, partition, Nc, barred, weight, inherited_N0)
+        312     self.width = partition[0]
+        313     if not all(i >= j for i, j in zip(partition, partition[1:])):
+    --> 314         raise ValueError('Not a young diagram.')
+        315 elif len(partition) > 0:
+        316     self.width = partition[0]
 
 
     ValueError: Not a young diagram.
 
 
-### Quark-like Young Diagrams
+### Young Diagrams
 
 We will use conventional Young diagrams to label representations of quarks:
 
@@ -146,7 +146,7 @@ yd1.dimension_Nc(Nc)
 
 ### Antiquark-like Young Diagrams
 
-We will use "barred" Young diagrams to label representations of quarks, arising from the adjoint representation:
+We will use "barred" Young diagrams to label representations of antiquarks, arising from the complex-conjugate of the covarient representation:
 
 
 ```python
@@ -167,11 +167,11 @@ yd1==yd2
 
 
 
-But when we evaluate a barred diagram for a given Nc, it becomes a conventional, unbarred Young diagram:
+But when we evaluate a barred diagram for a given $N_c$, e.g., $N_c=3$, it becomes a conventional, unbarred Young diagram:
 
 
 ```python
-yd2_Nc3 = yd2.evaluate_for_Nc(Nc)
+yd2_Nc3 = yd2.evaluate_for_Nc(3)
 ```
 
 
@@ -200,43 +200,171 @@ yd2_Nc3==yd1_Nc3
 
 
 
-# Multiplying Young diagrams - the DirectSum class
-
-### (Un)barred diagram-(un)barred diagram multiplication
-
-Uses Littlewood-Richardson rule for diagram multiplication
+but for a different $N_c$, it produces a different diagram
 
 
 ```python
-yd_unbarred = YoungDiagram((2,1))
-```
-
-
-```python
-ydubr_tensor_ydubr = yd_unbarred.LR_multiply(yd_unbarred)
-```
-
-The resulting object is a DirectSum class, which displays the direct (tensor) sum of YoungDiagram objects. The DirectSum class is a type of python dict, with keys being the YoungDiagram/Pair (more on these below) objects, and the values corresponding to the multiplicities. In the display, the constants are the multiplicities and their subscripts are the first Nc where this pair labels a young diagram.
-
-
-```python
-ydubr_tensor_ydubr
+yd2.evaluate_for_Nc(4)
 ```
 
 
 
 
-\[\begin{array}{c}1_{2}\,(3, 3)\oplus1_{2}\,(4, 2)\oplus
+$$ (3, 2, 1) $$
 
-2_{3}\,(3, 2, 1)\oplus1_{3}\,(2, 2, 2)\oplus1_{3}\,(4, 1, 1)\oplus
 
-1_{4}\,(3, 1, 1, 1)\oplus1_{4}\,(2, 2, 1, 1)\end{array}\]
+
+## Composite Diagram Pairs
+
+To create an arbitrary tensor representation of $SU(N)$, with any number of covarient or contravarient indices, we create a composite representation of an antiquark-like diagram and a quark-like diagram, composing them in a diagram pair. 
+
+They're constructed from two tuples, the first one defining the barred diagram, and the second the unbarred diagram.
+
+
+```python
+pair1 = Pair(((1),(1)))
+pair1
+```
+
+
+
+
+$$ 1_{2} \left(\overline{(1)},(1)\right) $$
+
+
+
+In the notation, the subscript denotes the lowest $N_c$ where this representation can exist. Like a barred diagram, we can evaluate it for a certain $N_c$:
+
+
+```python
+pair1_nc3 = pair1.evaluate_for_Nc(Nc=2)
+pair1_nc3
+```
+
+
+
+
+$$ (2) $$
 
 
 
 
 ```python
-yd_unbarred*yd_unbarred
+pair1_nc3 = pair1.evaluate_for_Nc(Nc=3)
+pair1_nc3
+```
+
+
+
+
+$$ (2, 1) $$
+
+
+
+A pair can also be made by pairing a YoungDiagram with a barred Young diagram, or the other way around:
+
+
+```python
+yd.pair_with(yd2) == yd2.pair_with(yd)
+```
+
+
+
+
+    True
+
+
+
+but not if they're both barred/unbarred:
+
+
+```python
+yd.pair_with(yd)
+```
+
+
+    ---------------------------------------------------------------------------
+
+    AttributeError                            Traceback (most recent call last)
+
+    Input In [21], in <cell line: 1>()
+    ----> 1 yd.pair_with(yd)
+
+
+    File ~/Documents/birdtracks/pair_multiplication/pair_multiplication/classes.py:661, in YoungDiagram.pair_with(self, other, inherited_N0, Nc)
+        658         return Pair((other,self),Nc=None, 
+        659                     inherited_N0=max(self.N0,other.N0, inherited_N0))
+        660     else:
+    --> 661         raise AttributeError("One of the diagrams must be barred to form a pair")
+        662 else:
+        663     try:
+
+
+    AttributeError: One of the diagrams must be barred to form a pair
+
+
+They can also be constructed by pairing a diagram with a partition, and the partition will be treated as the barred diagram if the first object is unbarred, or vice-versa:
+
+
+```python
+YoungDiagram((2,1)).pair_with((1))
+```
+
+
+
+
+$$ 1_{3} \left(\overline{(1)},(2, 1)\right) $$
+
+
+
+
+```python
+YoungDiagram((1),barred=True).pair_with((2,1))
+```
+
+
+
+
+$$ 1_{3} \left(\overline{(1)},(2, 1)\right) $$
+
+
+
+When a pair is constructed with a given $N_c$, it immediately evalues the corresponding YoungDiagram (unbarred) instead:
+
+
+```python
+Pair(((1),(1)),Nc=3)
+```
+
+
+
+
+$$ (2, 1) $$
+
+
+
+## Common properties of all objects
+
+Diagrams and pairs all have the following attributes, accessed the same way:
+
+    1) .Nc: the carried value of $N_c$ (int or None)
+    2) .N0: the lowest $N_c$ for which the representation occurs
+    3) .partition: the partition representation of the diagram/ pair of partitions for a pair object
+    4) .barred: True only for barred Young diagrams, otherwise False
+    5) .n: the number of boxes in the partition
+
+# Multiplying diagrams and pairs - the DirectSum class
+
+Any two of these objects can be multiplied together, if they share the same value of $N_c$, i.e., for both objects it has an equal value or is None. 
+
+The resulting decomposition is stored in a DirectSum object, which has attriutes elements and multiplicities:
+
+
+```python
+yd = YoungDiagram((2,1))
+
+ds = yd * yd
+ds
 ```
 
 
@@ -250,87 +378,41 @@ yd_unbarred*yd_unbarred
 
 
 
-the elements can be accessed using:
+the list containing all elements is acessed via:
 
 
 ```python
-ydubr_tensor_ydubr.keys() # this returns dict_keys
+ds.elements
 ```
 
 
 
 
-    dict_keys([(4, 1, 1), (2, 2, 2), (2, 2, 1, 1), (4, 2), (3, 3), (3, 1, 1, 1), (3, 2, 1)])
+    array([[2](3, 3), [2](4, 2), [3](2, 2, 2), [3](3, 2, 1), [3](4, 1, 1),
+           [4](2, 2, 1, 1), [4](3, 1, 1, 1)], dtype=object)
 
 
 
-or:
+and their index-corresponding multiplicities as:
 
 
 ```python
-ydubr_tensor_ydubr.elements()# this gives a list
+ds.multiplicities
 ```
 
 
 
 
-    [(4, 1, 1), (2, 2, 2), (2, 2, 1, 1), (4, 2), (3, 3), (3, 1, 1, 1), (3, 2, 1)]
+    array([1, 1, 1, 2, 1, 1, 1])
 
 
 
-the multiplicities can be recovered as a list in two ways as well:
-
-
-```python
-ydubr_tensor_ydubr.values()
-```
-
-
-
-
-    dict_values([1, 1, 1, 1, 1, 1, 2])
-
-
-
-or:
+DirectSums can collectivley be evaluated for a given $N_c$, if it was previously None
 
 
 ```python
-ydubr_tensor_ydubr.multiplicities()
-```
-
-
-
-
-    [1, 1, 1, 1, 1, 1, 2]
-
-
-
-the lowest nc for each diagram can be separately recovered:
-
-
-```python
-ydubr_tensor_ydubr.lowest_Nc()
-```
-
-
-
-
-    [3, 3, 4, 2, 2, 4, 3]
-
-
-
-We can evaluate it under a given Nc:
-
-
-```python
-Nc = 3
-ydubr_tensor_ydubr_nc3 = ydubr_tensor_ydubr.evaluate_for_Nc(Nc=Nc)
-```
-
-
-```python
-ydubr_tensor_ydubr_nc3
+ds_nc3 = ds.evaluate_for_Nc(3)
+ds_nc3
 ```
 
 
@@ -344,86 +426,62 @@ ydubr_tensor_ydubr_nc3
 
 
 
-we can get the dimension in the same way:
+they can be filtered in a numpy-friendly way. The following gives all the irreps of dimension 10 in SU(3):
 
 
 ```python
-ydubr_tensor_ydubr_nc3.dimension_Nc() # here the direct sum already knows which Nc we used
+ds_nc3[ds_nc3.dimension_Nc()==10]
 ```
 
 
 
 
-$$ 2\cdot8+1\cdot1+2\cdot10+1\cdot27 $$
+\[\begin{array}{c}1_{1}\,(3)\oplus
+
+1_{2}\,(3, 3)\end{array}\]
 
 
 
-and the sum:
+You can use the same setup to investigate the multiplicities, elements, or dimensions:
 
 
 ```python
-ydubr_tensor_ydubr_nc3.dimension_Nc().sum()
+ds_nc3.multiplicities[ds_nc3.elements==YoungDiagram((2,1),Nc=3)]
 ```
 
 
 
 
-    64
+    array([2])
 
 
 
-Similar when multiplying two barred young diagrams:
+### Standard Littlewood-Richardson Multiplication of Young diagrams only
 
-
-```python
-yd_barred = YoungDiagram((2,1),barred = True)
-ydbr_tensor_ydbr = yd_barred*yd_barred
-```
+Pair multiplication implements the column-wise multiplication method soon to be outlined in Ref.[work in progress].
+An alternative way to multiply Young diagrams *only* is to use the built-in function .LR_multiply():
 
 
 ```python
-ydbr_tensor_ydbr
-```
-
-
-
-
-\[\begin{array}{c}1_{2} \overline{(3, 3)}\oplus1_{2} \overline{(4, 2)}\oplus
-
-1_{3} \overline{(2, 2, 2)}\oplus2_{3} \overline{(3, 2, 1)}\oplus1_{3} \overline{(4, 1, 1)}\oplus
-
-1_{4} \overline{(2, 2, 1, 1)}\oplus1_{4} \overline{(3, 1, 1, 1)}\end{array}\]
-
-
-
-We can also evaluate it under an Nc:
-
-
-```python
-ydbr_tensor_ydbr_nc3 = ydbr_tensor_ydbr.evaluate_for_Nc(Nc=Nc)
-```
-
-
-```python
-ydbr_tensor_ydbr_nc3
+yd.LR_multiply(yd)
 ```
 
 
 
 
-\[\begin{array}{c}1_{0}\,()\oplus
+\[\begin{array}{c}1_{2}\,(3, 3)\oplus1_{2}\,(4, 2)\oplus
 
-1_{1}\,(3)\oplus
+1_{3}\,(2, 2, 2)\oplus2_{3}\,(3, 2, 1)\oplus1_{3}\,(4, 1, 1)\oplus
 
-2_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(3, 3)\end{array}\]
+1_{4}\,(3, 1, 1, 1)\oplus1_{4}\,(2, 2, 1, 1)\end{array}\]
 
 
 
-this is now the same as the DirectSum containing the first tensor multiple above:
+It produces the same result as the multiplication we previously constructed, but uses a different implementation - a good cross check:
 
 
 ```python
-ydbr_tensor_ydbr_nc3==ydubr_tensor_ydubr_nc3
+yd.LR_multiply(yd) == yd * yd
 ```
 
 
@@ -433,165 +491,11 @@ ydbr_tensor_ydbr_nc3==ydubr_tensor_ydubr_nc3
 
 
 
-we can also get the dimensions directly (this time specifying the Nc)
+## Myltiplying Composite Pairs
 
+The general multiplication method in this package extends to multiplying all combinations of YoungDiagram, Pair and DirectSum objects. 
 
-```python
-ydbr_tensor_ydbr.dimension_Nc(Nc=Nc)
-```
-
-
-
-
-$$ 2\cdot8+1\cdot1+2\cdot10+1\cdot27 $$
-
-
-
-# Barred diagram-unbarred diagram multiplication - the Pair class
-
-We do the multiplication using King's Q rule for diagram multiplication
-
-
-```python
-yd_barred = YoungDiagram((2,1),barred = True)
-yd_unbarred = YoungDiagram((2,1))
-
-barred_tensor_unbarred = yd_barred.LR_multiply(yd_unbarred)
-```
-
-The results is a DirectSum of Pair objects, where the first partition is always the barred diagram, the second is always the unbarred diagram.
-
-
-```python
-barred_tensor_unbarred
-```
-
-
-
-
-\[\begin{array}{c}1_{2} ()\oplus2_{2} \left(\overline{(1)},(1)\right)\oplus1_{2} \left(\overline{(2)},(2)\right)\oplus
-
-1_{3} \left(\overline{(2)},(1, 1)\right)\oplus1_{3} \left(\overline{(1, 1)},(2)\right)\oplus
-
-1_{4} \left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4} \left(\overline{(2, 1)},(2, 1)\right)\end{array}\]
-
-
-
-To construct a pair we can either give a tuple of partitions (the first one is always the barred one)
-
-
-```python
-pair_from_partitions = Pair(((2,1),(2,1)))
-```
-
-The multiple of 1 next to it stores the lowest Nc as its subscript
-
-
-```python
-pair_from_partitions
-```
-
-
-
-
-$$ 1_{4} \left(\overline{(2, 1)},(2, 1)\right) $$
-
-
-
-we can also construct it using two Young diagrams:
-
-
-```python
-yd_barred = YoungDiagram((2,1),barred = True)
-yd_unbarred = YoungDiagram((2,1))
-
-pair_from_diagrams = Pair((yd_barred,yd_unbarred))
-```
-
-they're the same:
-
-
-```python
-pair_from_partitions==pair_from_diagrams
-```
-
-
-
-
-    True
-
-
-
-another way is to pair one Young diagram with either a partition:
-
-
-```python
-pair_from_diag_and_partition = yd_barred.pair_with((2,1))
-```
-
-(when using this method, the given partition will create a diagram that is unbarred if yd_barred and vice-versa.)
-
-We can pair a diagram with another diagram:
-
-
-```python
-pair_from_diag_and_diag = yd_barred.pair_with(yd_unbarred)
-```
-
-(in this case, one must be barred and one must be unbarred, but they can be given in either order.)
-
-they're all the same:
-
-
-```python
-pair_from_partitions==pair_from_diag_and_diag and pair_from_diag_and_diag==pair_from_diag_and_partition
-```
-
-
-
-
-    True
-
-
-
-we can evaluate the Young diagram resulting from a given Nc in the usual way:
-
-
-```python
-yd_Nc7 = pair_from_partitions.evaluate_for_Nc(Nc=7)
-```
-
-
-```python
-yd_Nc7
-```
-
-
-
-
-$$ (4, 3, 2, 2, 2, 1) $$
-
-
-
-For an Nc lower than this diagrams lowest Nc, we get a NullDiagram 
-
-
-```python
-pair_from_partitions.evaluate_for_Nc(Nc=3)
-```
-
-
-
-
-$$ None $$
-
-
-
-# Myltiplying Young Diagram Pairs
-
-This is done using a column LR algorithm (see accompanying paper (in progress)). This rule currently handles all Young diagram multiplication using Python's magic method, as each Young diagram or barred diagram can be expressed as a pair.
-
-Let's create some pairs
+We'll show an example of multiplying Pairs, and dow the general $N_c$ dependence is preserved:
 
 
 ```python
@@ -645,7 +549,7 @@ lowest_nc
 
 
 
-    [4, 3, 4, 5, 3, 4, 4, 3, 3]
+    array([3, 3, 3, 3, 4, 4, 4, 4, 5])
 
 
 
@@ -662,63 +566,27 @@ In this case, we use the same multiplication algorithm (column LR):
 
 
 ```python
+Nc
+```
+
+
+
+
+    3
+
+
+
+
+```python
 p1_times_p2.evaluate_for_Nc(Nc)
 ```
 
 
 
 
-$$ 1_{1}\,(3)\oplus\,$$ 
- $$1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1) $$
+\[\begin{array}{c}1_{1}\,(3)\oplus
 
-
-
-
-```python
-(pair2.evaluate_for_Nc(Nc)*pair1.evaluate_for_Nc(Nc)).evaluate_for_Nc(Nc)
-```
-
-
-
-
-$$ 1_{1}\,(3)\oplus\,$$ 
- $$1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1) $$
-
-
-
-
-```python
-pair1.evaluate_for_Nc(Nc)
-```
-
-
-
-
-$$ (3) $$
-
-
-
-
-```python
-pair2.evaluate_for_Nc(Nc)
-```
-
-
-
-
-$$ (2, 1) $$
-
-
-
-
-```python
-p1_times_p2.evaluate_for_Nc(Nc) == (pair1.evaluate_for_Nc(Nc)*pair2.evaluate_for_Nc(Nc)).evaluate_for_Nc(Nc)
-```
-
-
-
-
-    True
+1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1)\end{array}\]
 
 
 
@@ -732,8 +600,9 @@ pair1.evaluate_for_Nc(Nc).LR_multiply(pair2.evaluate_for_Nc(Nc))
 
 
 
-$$ 1_{1}\,(3)\oplus\,$$ 
- $$1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1) $$
+\[\begin{array}{c}1_{1}\,(3)\oplus
+
+1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1)\end{array}\]
 
 
 
@@ -750,37 +619,97 @@ pair1.evaluate_for_Nc(Nc).LR_multiply(pair2.evaluate_for_Nc(Nc)).evaluate_for_Nc
 
 
 
-In fact, we can check this for all of the $N_c$ where new diagrams first appear:
+# Printing Outputs
+
+The package has several ways to output the results of calculations. Objects themselves can be printed on the command line and in IPython.
+
+A pythonic print() statement gives the command-line friendly output:
 
 
 ```python
-for nc in list(set(lowest_nc)):
-    statement = 'Nc='+str(nc)+': '
-    passing = True
-    if p1_times_p2.evaluate_for_Nc(nc) != pair1.evaluate_for_Nc(nc)*pair2.evaluate_for_Nc(nc):
-        passing = False
-        statement +='Multiplication comparison failed!'
-    if p1_times_p2.evaluate_for_Nc(nc) ==\
-           pair1.evaluate_for_Nc(nc).LR_multiply(pair2.evaluate_for_Nc(nc)):
-        if passing:
-            statement +='Correct!'
-    else:
-        statement +='LR comparison failed!'
-    print(statement)
+print(p1_times_p2)
 ```
 
-    Nc=3: Correct!
-    Nc=4: Correct!
-    Nc=5: Correct!
+    1[3]((1),(1))+1[3]((1, 1),(2))+1[3]((2),(2))+1[3]((2, 1),(3))+1[4]((1, 1),(1, 1))+1[4]((1, 1),(2))+1[4]((2, 1),(2, 1))+1[4]((1, 1, 1),(3))+1[5]((1, 1, 1),(2, 1))
+
+
+Here, the multiplicities are shown as indices at the front of each pair of partitions, and the square brackets [] contain the lowest $N_c$ of the representation.
+
+Simply outputting the object itself produces the IPython formatting:
+
+
+```python
+p1_times_p2
+```
+
+
+
+
+\[\begin{array}{c}1_{3} \left(\overline{(1)},(1)\right)\oplus1_{3} \left(\overline{(1, 1)},(2)\right)\oplus1_{3} \left(\overline{(2)},(2)\right)\oplus1_{3} \left(\overline{(2, 1)},(3)\right)\oplus
+
+1_{4} \left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4} \left(\overline{(1, 1)},(2)\right)\oplus1_{4} \left(\overline{(2, 1)},(2, 1)\right)\oplus1_{4} \left(\overline{(1, 1, 1)},(3)\right)\oplus
+
+1_{5} \left(\overline{(1, 1, 1)},(2, 1)\right)\end{array}\]
+
+
+
+Toggling the \LaTeX strings on and off can be done in two ways. To simply print the result, use .print(tex=True/False):
+
+
+```python
+p1_times_p2.print() #default is tex=False
+```
+
+    1[3]((1),(1))+1[3]((1, 1),(2))+1[3]((2),(2))+1[3]((2, 1),(3))+1[4]((1, 1),(1, 1))+1[4]((1, 1),(2))+1[4]((2, 1),(2, 1))+1[4]((1, 1, 1),(3))+1[5]((1, 1, 1),(2, 1))
+
+
+
+```python
+p1_times_p2.print(tex=True) 
+```
+
+    \[\begin{array}{c}1_{3} \left(\overline{(1)},(1)\right)\oplus1_{3} \left(\overline{(1, 1)},(2)\right)\oplus1_{3} \left(\overline{(2)},(2)\right)\oplus1_{3} \left(\overline{(2, 1)},(3)\right)\oplus
+    
+    1_{4} \left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4} \left(\overline{(1, 1)},(2)\right)\oplus1_{4} \left(\overline{(2, 1)},(2, 1)\right)\oplus1_{4} \left(\overline{(1, 1, 1)},(3)\right)\oplus
+    
+    1_{5} \left(\overline{(1, 1, 1)},(2, 1)\right)\end{array}\]
+
+
+Or, to get the string objects producing the outputs, you can call .to_str(tex=True/False):
+
+
+```python
+string = p1_times_p2.to_str() #default is tex=False
+string
+```
+
+
+
+
+    '1[3]((1),(1))+1[3]((1, 1),(2))+1[3]((2),(2))+1[3]((2, 1),(3))+1[4]((1, 1),(1, 1))+1[4]((1, 1),(2))+1[4]((2, 1),(2, 1))+1[4]((1, 1, 1),(3))+1[5]((1, 1, 1),(2, 1))'
+
+
+
+
+```python
+tex_string = p1_times_p2.to_str(tex = True) 
+tex_string
+```
+
+
+
+
+    '\\[\\begin{array}{c}1_{3} \\left(\\overline{(1)},(1)\\right)\\oplus1_{3} \\left(\\overline{(1, 1)},(2)\\right)\\oplus1_{3} \\left(\\overline{(2)},(2)\\right)\\oplus1_{3} \\left(\\overline{(2, 1)},(3)\\right)\\oplus\n\n1_{4} \\left(\\overline{(1, 1)},(1, 1)\\right)\\oplus1_{4} \\left(\\overline{(1, 1)},(2)\\right)\\oplus1_{4} \\left(\\overline{(2, 1)},(2, 1)\\right)\\oplus1_{4} \\left(\\overline{(1, 1, 1)},(3)\\right)\\oplus\n\n1_{5} \\left(\\overline{(1, 1, 1)},(2, 1)\\right)\\end{array}\\]'
+
 
 
 ## Coming soon:
 
  - ~ordering elements in the direct sum in a readable way~
  - ~algorithm speed-up for higher numbers of boxes~
- - better handling of diagram multiplicities
+ - ~better handling of diagram multiplicities~
  - better documentation and testing
- - more Latexing functions!
+ - ~more Latexing functions!~
 
 
 ```python

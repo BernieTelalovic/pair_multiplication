@@ -231,8 +231,24 @@ class NullDiagram:
 
     def lowest_Nc(self):
         return self.N0
-
-
+        
+    def print(self, tex = False):
+        strin = ''
+        if tex:
+            strin = self._repr_latex_()
+        else:
+            strin = self.get_cmdline_str()
+            
+        print(strin)
+        
+    def to_str(self,tex=False):
+        strin = ''
+        if tex:
+            strin = self._repr_latex_()
+        else:
+            strin = self.get_cmdline_str()
+            
+        return strin
 
 
 #######################################################################################################################
@@ -661,7 +677,7 @@ class YoungDiagram(NullDiagram):
             NcA = self.Nc
             NcB = other.Nc
 
-            if not NcA==NcB:
+            if not (NcA==NcB):
 
                 raise ValueError('The two diagrams must at least have equal Nc.')
 
@@ -670,8 +686,12 @@ class YoungDiagram(NullDiagram):
                 #warnings.warn('Diagram multiplication performed under specific Nc.')
         except Exception as e:
             pass
+            
+        Nc = self.Nc
     
-        if type(other) is YoungDiagram:
+        if (other == 0) or (self == 0):
+            return NullDiagram()
+        elif type(other) is YoungDiagram:
             
                 if other.barred==self.barred:
                 
@@ -685,9 +705,6 @@ class YoungDiagram(NullDiagram):
                     if np.all(other.word == 0j) or np.all(self.word == 0j):
                         return DirectSum([self.pair_with(other)], [self.weight*other.weight])
                     return self.multiplyQ(other,Nc)
-                
-        elif type(other) is NullDiagram:
-                return other
             
         else:
             try:
@@ -701,6 +718,11 @@ class YoungDiagram(NullDiagram):
     def as_ydiagram(self):
         pr = self.pair_with(())
         return pr._as_inner_ytab()
+        
+
+class BarredDiagram(YoungDiagram):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, barred=True, **kwargs)  # Force `barred=True`
 
 
 
@@ -726,13 +748,13 @@ class Pair(YoungDiagram):
     def __new__(cls, partition_tuple, Nc = None, weight:int = 1, inherited_N0:int=0):
     
         if not Nc is None:
-            permA_original = np.array(partition_tuple[1]).astype(int)
+            permA_original = np.array(partition_tuplify(partition_tuple[1])).astype(int)
         
-            permA = np.array(extend_partition(permA_original,Nc)).astype(int)
+            permA = np.array(extend_partition(permA_original,Nc),dtype=object).astype(int)
             diagB = YoungDiagram(partition_tuple[0],barred=True)
             
             diagB_conj_partition = np.array(extend_partition(
-                                            diagB.conjugate(Nc = Nc).partition,Nc)
+                                            diagB.conjugate(Nc = Nc).partition,Nc),dtype=object
                                              ).astype(int)
 
             
@@ -918,12 +940,11 @@ class Pair(YoungDiagram):
             #warnings.warn('Conjugate not admissible under given Nc.')
             return NullDiagram(Nc)
         
-        permA_original = np.array(self.partition[1]).astype(int)
-        
-        permA = np.array(extend_partition(permA_original,Nc)).astype(int)
+        permA_original = np.array(partition_tuplify(self.partition[1])).astype(int)
+        permA = np.array(extend_partition(permA_original,Nc),dtype=object).astype(int)
         
         diagB_conj_partition = np.array(extend_partition(
-                                    self.pair[0].conjugate(Nc = Nc).partition,Nc)
+                                    self.pair[0].conjugate(Nc = Nc).partition,Nc),dtype=object
                                          ).astype(int)
 
         
@@ -1097,27 +1118,26 @@ class Pair(YoungDiagram):
                     print(e)
         
     
-            
-            
+
+        
 #######################################################################################################################
 ##########################################DirectSum####################################################################
-#######################################################################################################################        
-            
-            
-class DirectSum(dict):
+####################################################################################################################### 
+        
+class DirectSum:
 
-    def __new__(cls, keys=None, values=None):
+    def __new__(cls, elements=None, multiplicities=None):
 
-        if keys is None:
+        if elements is None:
             return NullDiagram()
         else:
-            if len(keys)>0:
-                if isinstance(values,list) or isinstance(values,type(np.array([1]))):
-                    if len(keys)==len(values):
-                        if np.any(np.array(values) > 0):
+            if len(elements)>0:
+                if isinstance(multiplicities,list) or isinstance(multiplicities,type(np.array([1]))):
+                    if len(elements)==len(multiplicities):
+                        if np.any(np.array(multiplicities) > 0):
                         
-                            ky_arr = np.array(keys)
-                            vl_arr = np.array(values)
+                            ky_arr = np.array(elements)
+                            vl_arr = np.array(multiplicities)
                             
                             container = np.array([[ky, np.sum(vl_arr[ky_arr==ky])] 
                                                     for ky in list(set(ky_arr)) 
@@ -1125,25 +1145,25 @@ class DirectSum(dict):
                             
                             if len(container)>0:
                             
-                                instance = super().__new__(cls) 
-                                instance._keys = container[0]
-                                instance._values = container[1]
+                                instance = super(DirectSum, cls).__new__(DirectSum)
+                                instance._elements = container[0]
+                                instance._multiplicities = container[1]
                                 return instance 
                             else:
                                 return NullDiagram()
                         else:
                             return NullDiagram()
                     else:
-                        instance = super().__new__(cls)
-                        instance._keys = []
-                        instance._values = []
+                        instance = super(DirectSum, cls).__new__(DirectSum)
+                        instance._elements = []
+                        instance._multiplicities = []
                         
                         return instance 
                         
                 else:
                     
-                    vl_arr = np.ones(len(keys))
-                    ky_arr = np.array(keys)
+                    vl_arr = np.ones(len(elements))
+                    ky_arr = np.array(elements)
                     
                     container = np.array([[ky, np.sum(vl_arr[ky_arr==ky])] 
                                             for ky in list(set(ky_arr)) 
@@ -1151,9 +1171,9 @@ class DirectSum(dict):
                                             
                     if len(container)>0:
                     
-                        instance = super().__new__(cls)  # Create an instance of the class
-                        instance._keys = container[0]
-                        instance._values = container[1]
+                        instance = super(DirectSum, cls).__new__(DirectSum)  # Create an instance of the class
+                        instance._elements = container[0]
+                        instance._multiplicities = container[1]
 
                         return instance 
                     else:
@@ -1162,31 +1182,50 @@ class DirectSum(dict):
                 return NullDiagram()
 
     
-    def __init__(self, keys=None, values=None):
+    def __init__(self, elements=None, multiplicities=None):
 
-        if hasattr(self, "_keys") and hasattr(self, "_values"):
+        if hasattr(self, "_elements") and hasattr(self, "_multiplicities"):
         
-            if len(self._values) == 0:
+            if len(self._multiplicities) == 0:
                 raise ValueError("List of multiplicities must have equal length to list of diagrams/pairs.")
             else:
-                keys = self._keys
-                values = self._values
-                del self._keys  # Cleanup temporary attributes
-                del self._values
+                elements = self._elements
+                multiplicities = self._multiplicities
+                del self._elements  # Cleanup temporary attributes
+                del self._multiplicities
+                
         
-        if len(keys)>0:
-            super().__init__(zip(keys,values))
-        else:
-            super().__init__()
+        elements = np.array(elements,dtype=object)
+        inds = elements.argsort()
+        multiplicities = np.array(multiplicities,dtype = int)[inds]
+        elements = elements[inds]
+        n0s = np.array([el.N0 if hasattr(el, "N0") else 0 for el in elements])
+            
+        self.elements = elements
+        self.multiplicities = multiplicities
+        self.N0 = n0s
 
-        
+    def __getitem__(self, condition):
+        """
+        Allow NumPy-like filtering to return a new DirectSum object containing only
+        the elements that satisfy the condition.
+        """
+        if isinstance(condition, np.ndarray):
+            filtered_elements = self.elements[condition]
+            filtered_multiplicities = self.multiplicities[condition]
+            return DirectSum(filtered_elements, filtered_multiplicities)
+        else:
+            raise TypeError("Indexing must be done with a boolean NumPy array.")
+            
+            
+            
     def conjugate(self,Nc):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            keys = self.keys()
-            values = list(self.values())
             
-            new_keys = np.array([ky.conjugate(Nc=Nc) for ky in keys])
+            values = self.multiplicities
+            
+            new_keys = np.array([ky.conjugate(Nc=Nc) for ky in self.elements])
             new_vals = np.array([values[ind]*new_keys[ind].multiplicity(Nc) 
                                  for ind in range(len(new_keys))])
             
@@ -1195,10 +1234,10 @@ class DirectSum(dict):
     def evaluate_for_Nc(self,Nc):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            keys = self.keys()
-            values = list(self.values())
+
+            values = self.multiplicities
             
-            new_keys = np.array([ky.evaluate_for_Nc(Nc=Nc) for ky in keys])
+            new_keys = np.array([ky.evaluate_for_Nc(Nc=Nc) for ky in self.elements])
             new_vals = np.array([values[ind]*new_keys[ind].multiplicity(Nc) 
                                  for ind in range(len(new_keys))])
                                  
@@ -1212,28 +1251,34 @@ class DirectSum(dict):
         
     def dimension_Nc(self,Nc=None):
     
-        elements = np.array([ky.dimension_Nc(Nc) for ky in self.elements()])
-        multiplicities = np.array(self.multiplicities())[elements>0]
-        elements = elements[elements>0]
+        elements = np.array([ky.dimension_Nc(Nc) for ky in self.elements],dtype = float)
+        #multiplicities = np.array(self.multiplicities)[elements>0]
+        #elements = elements[elements>0]
+        
+        return elements
             
-        return DimensionDirectSum(elements,multiplicities)
+        #return DimensionDirectSum(elements,multiplicities)
+        
+    def sum_dimensions(self, Nc=None):
+        dims = self.dimension_Nc(Nc)
+        
+        return (dims*self.multiplicities).sum()
         
     def get_str(self):
     
         strin = ''
         lines = []  # List of lines for LaTeX output
         current_line = []  # Objects in the current line
-        elements = np.array(list(self.keys()))
-        inds = elements.argsort()
-        multiplicities = np.array(list(self.values()))[inds]
-        elements = elements[inds]
+        elements = self.elements
+        multiplicities = self.multiplicities.astype(int)
+        
         oplus = r'\oplus'
         N0_prev = 0#
         if len(elements)> 0:
-            N0_prev = int(elements[0].N0)
+            N0_prev = int(self.N0[0])
         
         for ind in range(len(elements)):
-            N0 = int(elements[ind].N0)
+            N0 = int(self.N0[ind])
             if N0 > N0_prev:
                 #start_str += "\,$$ \n $$"
                 if current_line:
@@ -1267,10 +1312,8 @@ class DirectSum(dict):
     def get_cmdline_str(self):
     
         strin = ''
-        elements = np.array(list(self.keys()))
-        inds = elements.argsort()
-        multiplicities = np.array(list(self.values()))[inds]
-        elements = elements[inds]
+        elements = self.elements
+        multiplicities = self.multiplicities
         oplus = '+'
         
         for ind in range(len(elements)):
@@ -1298,21 +1341,21 @@ class DirectSum(dict):
         
     def __add__(self,other):
         
-        keys = []
-        values = []
+        elements = []
+        multiplicities = []
         
         if type(other)==DirectSum:
-            keys = list(self.keys())+list(other.keys())
-            values = list(self.values())+list(other.values())
-            return DirectSum(keys,values)
+            elements = list(self.elements)+list(other.elements)
+            multiplicities = list(self.multiplicities)+list(other.multiplicities)
+            return DirectSum(elements,multiplicities)
         elif type(other) in [YoungDiagram,NullDiagram,Pair]:
             
-            keys = list(self.keys())
-            keys.append(other)
+            elements = list(self.elements)
+            elements.append(other)
             
-            values = list(self.values())
-            values.append(other.weight)
-            return DirectSum(keys,values)
+            multiplicities = list(self.multiplicities)
+            multiplicities.append(other.weight)
+            return DirectSum(elements,multiplicities)
         else:
             raise NotImplemented
 
@@ -1327,22 +1370,22 @@ class DirectSum(dict):
         
     def __sub__(self,other):
         
-        keys = []
-        values = []
+        elements = []
+        multiplicities = []
         
         if type(other)==DirectSum:
-            keys = list(self.keys())+list(other.keys())
-            values = list(self.values())+list(-1*np.array(list(other.values())))
-            return DirectSum(keys,values)
+            elements = list(self.elements)+list(other.elements)
+            multiplicities = list(self.multiplicities)+list(-1*np.array(list(other.multiplicities)))
+            return DirectSum(elements,multiplicities)
         elif type(other) in [YoungDiagram,NullDiagram,Pair]:
             
-            keys = list(self.keys())
-            keys.append(other)
+            elements = list(self.keys())
+            elements.append(other)
             
-            values = list(self.values())
-            values.append(-1*other.weight)
+            multiplicities = list(self.multiplicities)
+            multiplicities.append(-1*other.weight)
             
-            return DirectSum(keys,values)
+            return DirectSum(elements,multiplicities)
         else:
             raise NotImplemented
             
@@ -1358,9 +1401,9 @@ class DirectSum(dict):
     
     def set_N0(self,val):
         
-        new_keys = [ky.set_N0(val) for ky in self.keys()]
+        new_keys = [ky.set_N0(val) for ky in self.elements]
         
-        self = DirectSum(new_keys,list(self.values()))
+        self = DirectSum(new_keys,self.multiplicities)
         
     def __mul__(self, other):
     
@@ -1368,11 +1411,11 @@ class DirectSum(dict):
         
         if type(other) is DirectSum:
             #TODO
-            keys_me = self.elements()
-            keys_other = other.elements()
+            keys_me = self.elements
+            keys_other = other.elements
             
-            mults_me = self.multiplicities()
-            mults_other = other.multiplicities()
+            mults_me = self.multiplicities
+            mults_other = other.multiplicities
             
             container = [(keys_me[mind]*keys_other[ond])*mults_me[mind]*mults_other[ond]
                          for mind in range(len(keys_me)) for ond in range(len(keys_other))]
@@ -1380,8 +1423,8 @@ class DirectSum(dict):
             return np.sum(container)
         
         elif (type(other) is Pair) or (type(other) is YoungDiagram):
-            keys_me = self.elements()
-            mults_me = self.multiplicities()
+            keys_me = self.elements
+            mults_me = self.multiplicities
             
             container = [(keys_me[mind]*other)*mults_me[mind] for mind in range(len(keys_me))]
             return np.sum(container)
@@ -1394,8 +1437,8 @@ class DirectSum(dict):
             try:
                 check_number = float(other)
                 
-                values = np.array(self.multiplicities())*other
-                keys = self.elements()
+                values = np.array(self.multiplicities)*other
+                keys = self.elements
                 
                 return DirectSum(keys,values)
                 
@@ -1405,17 +1448,19 @@ class DirectSum(dict):
     def __rmul__(self, other):
         return self*other
                 
-    def elements(self):
-        return list(self.keys())
-    def multiplicities(self):
-        return list(self.values())
+    def keys(self):
+        return self.elements
+    def values(self):
+        return self.multiplicities
+    def N0(self):
+        return self.N0
     def lowest_Nc(self):
-        return [el.N0 for el in self.keys()]
+        return self.N0
         
     def __eq__(self,other):
     
         try:
-            if self-other==0:
+            if (self-other)==0:
                 return True
             else:
                 return False
@@ -1424,21 +1469,34 @@ class DirectSum(dict):
         
     def as_ydiagram(self):
     
-        elements = np.array(list(self.keys()))
-        inds = elements.argsort()
-        multiplicities = np.array(list(self.values()))[inds]
-        n0s = np.array(self.lowest_Nc())[inds]
-        elements = elements[inds]
-        
+        elements = self.elements
+        multiplicities = self.multiplicities.astype(int)
+        n0s = self.N0
+
         lis = [str(multiplicities[ind])+r'_{'+str(n0s[ind])+'}\,'+elements[ind].as_ydiagram()
                 for ind in range(len(elements))]
     
         return '\,\oplus\,'.join(lis)
 
+    def print(self, tex = False):
+        strin = ''
+        if tex:
+            strin = '$$'+self._repr_latex_()+'$$'
+        else:
+            strin = self.get_cmdline_str()
+            
+        print(strin)
+        
+    def to_str(self,tex=False):
+        strin = ''
+        if tex:
+            strin = self._repr_latex_()
+        else:
+            strin = self.get_cmdline_str()
+            
+        return strin
 
-
-
-class DimensionDirectSum(DirectSum):
+class DimensionDirectSum:
 
     def __init__(self, keys, values):
         # Ensure keys and values are of the same length
@@ -1448,14 +1506,23 @@ class DimensionDirectSum(DirectSum):
         #ky_arr = np.array(keys)
         #vl_arr = np.array(values)
         
-        container = np.array([[keys[ind],values[ind]] for ind in range(len(keys)) if keys[ind]>0]).T
-
-        super().__init__(container[0], container[1])
+        #container = np.array([[keys[ind],values[ind]] for ind in range(len(keys)) if keys[ind]>0]).T
+        
+        #container = np.array([[ky, np.sum(values[keys==ky])] 
+        #                        for ky in list(set(keys)) 
+        #                        if np.sum(values[keys==ky])!=0 and ky>0]).T
+        
+        elements = np.array(keys)#np.array(container[0])
+        inds = elements.argsort()
+        multiplicities = np.array(values)[inds]
+        elements = elements[inds]
+        self.elements = elements
+        self.multiplicities = multiplicities
 
     def get_cmdline_str(self):
         strin = ''
-        elements = list(self.keys())
-        multiplicities = list(self.values())
+        elements = self.elements
+        multiplicities = self.multiplicities
         oplus = r'+'
         
         for ind in range(len(elements)):
@@ -1474,8 +1541,8 @@ class DimensionDirectSum(DirectSum):
     def get_str(self):
     
         strin = ''
-        elements = list(self.keys())
-        multiplicities = list(self.values())
+        elements = self.elements
+        multiplicities = self.multiplicities
         oplus = r'+'
         
         for ind in range(len(elements)):
@@ -1501,13 +1568,16 @@ class DimensionDirectSum(DirectSum):
         
     def sum(self):
     
-        dims = np.array(list(self.keys()))
-        mults = np.array(list(self.values()))
+        dims = self.elements
+        mults = self.multiplicities
         
         return np.sum(dims*mults).astype(int)
         
     def lowest_Nc(self):
         raise AttributeError("DimensionDirectSum only carries dimension info and cannot recover partitions or lowest Nc.")
+        
+    def N0(self):
+        return self.lowest_Nc()
         
     
 

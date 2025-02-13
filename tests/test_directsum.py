@@ -66,24 +66,22 @@ class TestDirectSum(unittest.TestCase):
                         
     def test_direct_sum_multiplicities(self):
 
-        ds = YoungDiagram((2,1))*YoungDiagram((2,1))
-        dim = ds.dimension_Nc(3)
-        expected_multiplicities = sorted([2, 1, 2, 1])
-        expected_elements = sorted([8, 1, 10, 27])
+        ds = YoungDiagram((2,1),Nc=3)*YoungDiagram((2,1),Nc=3)
+        expected_multiplicities = sorted([2, 1, 1,1, 1])
+        expected_elements = sorted([8, 1, 10,10, 27])
         
-        self.assertEqual(sorted(dim.multiplicities()), expected_multiplicities, 
+        self.assertEqual(sorted(ds.multiplicities), expected_multiplicities, 
                         "Incorrect dimensional multiplicities.")
-        self.assertEqual(sorted(dim.elements()), expected_elements, 
+        self.assertEqual(sorted(ds.dimension_Nc()), expected_elements, 
                         "Incorrect dimensional elements.")
                         
     def test_direct_sum_dimension(self):
     
-        yd = YoungDiagram((2,1))
+        yd = YoungDiagram((2,1),Nc=3)
         ds = yd*yd
-        dim = ds.dimension_Nc(3)
         expected_sum = 64
         
-        self.assertEqual(dim.sum(), expected_sum, 
+        self.assertEqual(ds.sum_dimensions(), expected_sum, 
                         "Incorrect dimensional sum.")
                         
                         

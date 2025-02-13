@@ -282,7 +282,13 @@ def superpose(num_letters, wordB,wordA):
 
         return mults, mults_cands, multiplicity_counter
     
-
+def partition_tuplify(part):
+    """Convert input into a tuple representation of a partition."""
+    if (not isinstance(part, tuple)) and (not isinstance(part, np.ndarray)):
+        if part == 0:
+            return ()
+        part = (part,)
+    return part
     
 def extend_partition(perm,new_length):
     
