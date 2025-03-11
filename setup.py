@@ -190,9 +190,10 @@ setup(
     ext_modules=cythonize(cython_extensions, language_level=3),  # Ensure extensions are built
     include_dirs=[np.get_include()],  # Include NumPy headers globally
     install_requires=[
-        "numpy",
-        "scipy",
-        "coverage",
+        "cython>=3.0.11",
+        "numpy>=1.23.5",
+        "scipy>=1.15.1",
+        "coverage>=7.6.10",
     ],
     cmdclass={"build_ext": build_ext_inplace},
     include_package_data=True,  # Include additional files

@@ -473,7 +473,7 @@ yd.LR_multiply(yd)
 
 1_{3}\,(2, 2, 2)\oplus2_{3}\,(3, 2, 1)\oplus1_{3}\,(4, 1, 1)\oplus
 
-1_{4}\,(3, 1, 1, 1)\oplus1_{4}\,(2, 2, 1, 1)\end{array}\]
+1_{4}\,(2, 2, 1, 1)\oplus1_{4}\,(3, 1, 1, 1)\end{array}\]
 
 
 
@@ -668,11 +668,11 @@ p1_times_p2.print() #default is tex=False
 p1_times_p2.print(tex=True) 
 ```
 
-    \[\begin{array}{c}1_{3} \left(\overline{(1)},(1)\right)\oplus1_{3} \left(\overline{(1, 1)},(2)\right)\oplus1_{3} \left(\overline{(2)},(2)\right)\oplus1_{3} \left(\overline{(2, 1)},(3)\right)\oplus
+    $$\[\begin{array}{c}1_{3} \left(\overline{(1)},(1)\right)\oplus1_{3} \left(\overline{(1, 1)},(2)\right)\oplus1_{3} \left(\overline{(2)},(2)\right)\oplus1_{3} \left(\overline{(2, 1)},(3)\right)\oplus
     
     1_{4} \left(\overline{(1, 1)},(1, 1)\right)\oplus1_{4} \left(\overline{(1, 1)},(2)\right)\oplus1_{4} \left(\overline{(2, 1)},(2, 1)\right)\oplus1_{4} \left(\overline{(1, 1, 1)},(3)\right)\oplus
     
-    1_{5} \left(\overline{(1, 1, 1)},(2, 1)\right)\end{array}\]
+    1_{5} \left(\overline{(1, 1, 1)},(2, 1)\right)\end{array}\]$$
 
 
 Or, to get the string objects producing the outputs, you can call .to_str(tex=True/False):
@@ -710,8 +710,3 @@ tex_string
  - ~better handling of diagram multiplicities~
  - better documentation and testing
  - ~more Latexing functions!~
-
-
-```python
-
-```
