@@ -1333,6 +1333,9 @@ class DirectSum:
     def __str__(self):
         
         return self.get_cmdline_str()
+        
+    def __repr__(self):
+        return self.get_cmdline_str()
     
     def _repr_latex_(self):            
 

@@ -96,11 +96,12 @@ def get_wstp_paths(mathematica_base_path):
 
 # If Mathematica is found, modify init.m
 is_mathematica, WSTP_INCLUDE, WSTP_LIB = find_mathematica()
+is_mathematica= False
 
 #if (WSTP_INCLUDE is None) or (WSTP_LIB is None):
 #    is_mathematica = False
 
-if is_mathematica:
+if is_mathematica and False:
 
     try:
         print("Mathematica detected! Modifying init.m...", file=sys.stderr)
@@ -152,16 +153,6 @@ with open("README.md", "r") as fh:
     
 # Only include WSTP paths if Mathematica is found
 wstp_ext = None
-#if WSTP_INCLUDE and WSTP_LIB:# and 
-if is_mathematica:
-    wstp_ext = Extension(
-        "pair_multiplication.mathematica_wrapper",
-        sources=["pair_multiplication/mathematica/mathematica_wrapper.c"],
-        include_dirs=[WSTP_INCLUDE],
-        library_dirs=[WSTP_LIB],
-        libraries=["WSTP"],  # Link to WSTP
-    )
-
 
 cython_extensions = [
     Extension(
@@ -174,6 +165,13 @@ cython_extensions = [
 package_data = ["*.so"]
 
 if is_mathematica:
+    wstp_ext = Extension(
+        "pair_multiplication.mathematica_wrapper",
+        sources=["mathematica/mathematica_wrapper.c"],
+        include_dirs=[WSTP_INCLUDE],
+        library_dirs=[WSTP_LIB],
+        libraries=["WSTP"],  # Link to WSTP
+    )
     cython_extensions.append(wstp_ext)
     package_data.append("mathematica/pair_multiplication.wl")
 
