@@ -416,9 +416,9 @@ ds_nc3
 
 
 
-$$ \begin{array}{c}1_{0}\,()\oplus
-1_{1}\,(3)\oplus
-2_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(3, 3)\end{array} $$
+$$ \begin{array}{c}1_{0} ()\oplus
+1_{1} (3)\oplus
+2_{2} (2, 1)\oplus1_{2} (4, 2)\oplus1_{2} (3, 3)\end{array} $$
 
 
 
@@ -432,8 +432,8 @@ ds_nc3[ds_nc3.dimension_Nc()==10]
 
 
 
-$$ \begin{array}{c}1_{1}\,(3)\oplus
-1_{2}\,(3, 3)\end{array} $$
+$$ \begin{array}{c}1_{1} (3)\oplus
+1_{2} (3, 3)\end{array} $$
 
 
 
@@ -464,9 +464,9 @@ yd.LR_multiply(yd)
 
 
 
-$$ \begin{array}{c}1_{2}\,(3, 3)\oplus1_{2}\,(4, 2)\oplus
-1_{3}\,(2, 2, 2)\oplus2_{3}\,(3, 2, 1)\oplus1_{3}\,(4, 1, 1)\oplus
-1_{4}\,(2, 2, 1, 1)\oplus1_{4}\,(3, 1, 1, 1)\end{array} $$
+$$ \begin{array}{c}1_{2} (3, 3)\oplus1_{2} (4, 2)\oplus
+1_{3} (2, 2, 2)\oplus2_{3} (3, 2, 1)\oplus1_{3} (4, 1, 1)\oplus
+1_{4} (2, 2, 1, 1)\oplus1_{4} (3, 1, 1, 1)\end{array} $$
 
 
 
@@ -575,8 +575,8 @@ p1_times_p2.evaluate_for_Nc(Nc)
 
 
 
-$$ \begin{array}{c}1_{1}\,(3)\oplus
-1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1)\end{array} $$
+$$ \begin{array}{c}1_{1} (3)\oplus
+1_{2} (2, 1)\oplus1_{2} (4, 2)\oplus1_{2} (5, 1)\end{array} $$
 
 
 
@@ -590,8 +590,8 @@ pair1.evaluate_for_Nc(Nc).LR_multiply(pair2.evaluate_for_Nc(Nc))
 
 
 
-$$ \begin{array}{c}1_{1}\,(3)\oplus
-1_{2}\,(2, 1)\oplus1_{2}\,(4, 2)\oplus1_{2}\,(5, 1)\end{array} $$
+$$ \begin{array}{c}1_{1} (3)\oplus
+1_{2} (2, 1)\oplus1_{2} (4, 2)\oplus1_{2} (5, 1)\end{array} $$
 
 
 
