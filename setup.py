@@ -186,6 +186,7 @@ setup(
     url="https://github.com/BernandaTelalovic/pair_multiplication",  # Replace with your package's URL
     packages=find_packages(),
     ext_modules=cythonize(cython_extensions, language_level=3),  # Ensure extensions are built
+    zip_safe=False,
     include_dirs=[np.get_include()],  # Include NumPy headers globally
     install_requires=[
         "cython>=3.0.11",
