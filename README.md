@@ -16,7 +16,7 @@ The multiplication methods have been successfully numerically tested for all par
 Install the package using `pip`:
 
 ```bash
-pip install --no-binary :all: git+https://github.com/BernieTelalovic/pair_multiplication.git
+pip install --no-binary :all: --no-build-isolation git+https://github.com/BernieTelalovic/pair_multiplication.git
 
 
 ```
