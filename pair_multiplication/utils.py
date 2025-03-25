@@ -12,9 +12,9 @@ def clean_numpy(obj):
     if isinstance(obj, np.generic):
         return obj.item()
     elif isinstance(obj, (list, tuple, set)):
-        return type(obj)(normalize(x) for x in obj)
+        return type(obj)(clean_numpy(x) for x in obj)
     elif isinstance(obj, dict):
-        return {normalize(k): normalize(v) for k, v in obj.items()}
+        return {clean_numpy(k): clean_numpy(v) for k, v in obj.items()}
     return obj
 
 
