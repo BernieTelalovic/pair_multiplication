@@ -69,7 +69,8 @@ class NullDiagram:
         if self.barred:
             brd='_'
             
-        strn = str(self.partition).replace(',)', ')')+brd
+        strn = str(clean_numpy(self.partition)).replace(',)', ')')+brd
+        
         if self.partition is None:
             strn = '0'
         

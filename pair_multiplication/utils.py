@@ -1,10 +1,22 @@
 # utils.py
 import warnings
+import re
 from collections import Counter
 import numpy as np
 import itertools as it
 from .cutils_pair_multiplication import *
 from multiprocessing import Pool
+
+def clean_numpy(obj):
+    """Convert numpy scalars to native Python types recursively."""
+    if isinstance(obj, np.generic):
+        return obj.item()
+    elif isinstance(obj, (list, tuple, set)):
+        return type(obj)(normalize(x) for x in obj)
+    elif isinstance(obj, dict):
+        return {normalize(k): normalize(v) for k, v in obj.items()}
+    return obj
+
 
 def Nc_positive(Nc:int):
         
