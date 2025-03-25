@@ -54,7 +54,7 @@ class NullDiagram:
             barred_left = r'\overline{'
             barred_right = r'}'
             
-        partition_str = str(self.partition).replace(',)', ')')
+        partition_str = str(clean_numpy(self.partition)).replace(',)', ')')
         
         strn = barred_left+partition_str+barred_right
         
