@@ -719,7 +719,19 @@ class YoungDiagram(NullDiagram):
     def as_ydiagram(self):
         pr = self.pair_with(())
         return pr._as_inner_ytab()
-        
+    
+    def remove_box(self):
+
+        removing_box = YoungDiagram((1), barred=not self.barred)
+        own_diagram = YoungDiagram(self.partition, barred=self.barred, inherited_N0=self.N0)
+
+        ds = own_diagram*removing_box - own_diagram.pair_with(removing_box)
+
+        if self.Nc is not None:
+            ds = ds.evaluate_for_Nc(self.Nc)
+
+        return ds
+    
 
 class BarredDiagram(YoungDiagram):
     def __init__(self, *args, **kwargs):
@@ -810,6 +822,19 @@ class Pair(YoungDiagram):
             self._hash = hash((self.partition,self.N0,self.Nc,self.barred,self.weight))
             #self.hook_length = self.get_hook_length()
 
+    def remove_box(self):
+        ubr = self.pair[1]
+        brd = self.pair[0]
+
+        ubr_minus_box = ubr.remove_box().elements
+        ubr_pairs = [ubr_minus_box[ind].pair_with(brd) for ind in range(len(ubr_minus_box))]
+        brd_minus_box = brd.remove_box().elements
+        brd_pairs = [brd_minus_box[ind].pair_with(ubr) for ind in range(len(brd_minus_box))]
+
+        dl = ubr_pairs + brd_pairs
+        ds = DirectSum(dl, np.ones(len(dl)))
+
+        return ds
         
     def get_str(self):
         strn = ''
