@@ -157,7 +157,36 @@ class TestYoungDiagram(unittest.TestCase):
         
         self.assertEqual(barred_tensor_unbarred_CA, barred_tensor_unbarred_LR, 
                         "Multiplying barred and unbarred diags with CA =/= LR.")
+        
+
+    def test_remove_box(self):
+        yd = YoungDiagram((3,2,1))
+        expected_yds = DirectSum([YoungDiagram((2,2,1)), YoungDiagram((3,1,1)), YoungDiagram((3,2))], [1,1,1])
+        resulting_yds = yd.remove_box()
+        
+        self.assertEqual(resulting_yds, expected_yds,
+                        "Removing a box from a young diagram is incorrect.")
+        
+    def test_remove_box(self):
+        yd = YoungDiagram((3,2,1), Nc = 3)
+        expected_yds = DirectSum([YoungDiagram((1,1), Nc = 3),
+                                   YoungDiagram((2), Nc = 3)], [1,1])
+        resulting_yds = yd.remove_box()
+        
+        self.assertEqual(resulting_yds, expected_yds,
+                        "Removing a box from a young diagram is incorrect.")
+        
+
+    def test_remove_box_barred(self):
                         
+        yd = YoungDiagram((3,2,1), barred = True)
+        expected_yds = DirectSum([YoungDiagram((2,2,1), barred = True), 
+                                  YoungDiagram((3,1,1), barred = True), 
+                                  YoungDiagram((3,2), barred = True)], [1,1,1])
+        resulting_yds = yd.remove_box()
+        
+        self.assertEqual(resulting_yds, expected_yds,
+                        "Removing a box from a young diagram is incorrect.")
                         
                         
                         

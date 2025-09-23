@@ -45,6 +45,9 @@ class NullDiagram:
         
     def dimension_Nc(self,Nc=None):
         return 0        
+    
+    def remove_box(self):
+        return DirectSum([NullDiagram()],[0])
         
     def get_str(self):
         
