@@ -333,7 +333,7 @@ class YoungDiagram(NullDiagram):
             self.Nc = Nc
             self.N0 = N0
             
-            self.n = sum(partition)
+            self.n = np.sum(partition)
             
             self.partition = partition
             self.word = self.get_word()
