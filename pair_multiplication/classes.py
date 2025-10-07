@@ -604,13 +604,17 @@ class YoungDiagram(NullDiagram):
             warnings.warn('Cannot lower N0 for this diagram.')
         self.N0=max([val,self.N0])
         
-    def get_hook_length(self):
+    def get_hook_lengths(self):
     
         modarr = make_2d_array_ones(self.partition)
             
         hook = np.array([[np.sum(modarr[indx,indy:])+np.sum(modarr[indx:,indy])-1 
                             for indy in range(len(modarr[0]))]
                             for indx in range(len(modarr))])
+        return hook
+        
+    def get_hook_length(self):
+        hook = self.get_hook_lengths()
         return np.prod(hook[hook>0])
             
     def dimension_Sn(self):

@@ -302,7 +302,7 @@ def partition_tuplify(part):
         part = (part,)
     elif len(part) == 0:
         return ()
-    if part == 0:
+    elif part[0] == 0:
         return ()
     return tuple(part)
     
