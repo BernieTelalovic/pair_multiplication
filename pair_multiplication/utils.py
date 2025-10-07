@@ -296,10 +296,14 @@ def superpose(num_letters, wordB,wordA):
     
 def partition_tuplify(part):
     """Convert input into a tuple representation of a partition."""
-    if (not isinstance(part, tuple)) and (not isinstance(part, np.ndarray)):
+    if not hasattr(part, "__len__"):
         if part == 0:
             return ()
         part = (part,)
+    elif len(part) == 0:
+        return ()
+    if part == 0:
+        return ()
     return tuple(part)
     
 def extend_partition(perm,new_length):

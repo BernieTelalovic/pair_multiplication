@@ -16,11 +16,15 @@ cdef inline bint is_monotonic_decreasing(cnp.ndarray[cnp.int64_t, ndim=1] lis):
 
 def partition_tuplify(part):
     """Convert input into a tuple representation of a partition."""
-    if not isinstance(part, tuple):
+    if not hasattr(part, "__len__"):
         if part == 0:
             return ()
         part = (part,)
-    return part
+    elif len(part) == 0:
+        return ()
+    if part == 0:
+        return ()
+    return tuple(part)
 
 
 def make_2d_array(perm, column_sort=False, dims=None):
