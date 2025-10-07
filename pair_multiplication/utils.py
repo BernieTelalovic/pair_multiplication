@@ -300,7 +300,7 @@ def partition_tuplify(part):
         if part == 0:
             return ()
         part = (part,)
-    return part
+    return tuple(part)
     
 def extend_partition(perm,new_length):
     
