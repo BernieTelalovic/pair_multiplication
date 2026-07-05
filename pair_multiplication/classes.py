@@ -395,38 +395,37 @@ class YoungDiagram(NullDiagram):
         except exception as e:
             pass
         
-        finally:
-            if type(other) is NullDiagram:
-                return other
-            if type(other) is Pair:
+        if type(other) is NullDiagram:
+            return other
+        if type(other) is Pair:
             
-                sl_pair = self.pair_with(YoungDiagram((), barred = not self.barred))
-                mult = other*sl_pair
+            sl_pair = self.pair_with(YoungDiagram((), barred = not self.barred))
+            mult = other*sl_pair
                 
-                if not (Nc is None):
-                    mult = mul.evaluate_for_Nc(Nc)
+            if not (Nc is None):
+                mult = mul.evaluate_for_Nc(Nc)
                 
-                return mult
+            return mult
 
-            elif type(other) is YoungDiagram:
+        elif type(other) is YoungDiagram:
             
-                sl_pair = self.pair_with(YoungDiagram((), barred = not self.barred))
-                oth_pair = other.pair_with(YoungDiagram((), barred = not other.barred))
+            sl_pair = self.pair_with(YoungDiagram((), barred = not self.barred))
+            oth_pair = other.pair_with(YoungDiagram((), barred = not other.barred))
                 
-                mul = oth_pair*sl_pair
+            mul = oth_pair*sl_pair
                 
-                if (not Nc is None):
-                    mul = mul.evaluate_for_Nc(Nc)
+            if (not Nc is None):
+                mul = mul.evaluate_for_Nc(Nc)
                 
-                return mul
+            return mul
             
-            else:
-                try:
-                    check_number = float(other)
+        else:
+            try:
+                check_number = float(other)
 
-                    return DirectSum([self], [self.weight*other])
-                except Exception as e:
-                    raise NotImplemented
+                return DirectSum([self], [self.weight*other])
+            except Exception as e:
+                raise NotImplemented
                     
     def __rmul__(self, other):
     
@@ -901,53 +900,52 @@ class Pair(YoungDiagram):
             elif type(NcA)==int and type(NcB)==int:
                 Nc = NcA
                 #warnings.warn('Diagram multiplication performed under specific Nc.')
-        except exception as e:
+        except Exception as e:
             pass
-        finally:
-            if type(other) is Pair:
+        if type(other) is Pair:
             
-                if self.n == 0:
-                    return DirectSum([other], [other.weight])
-                if other.n == 0:
-                    return DirectSum([self], [self.weight])
+            if self.n == 0:
+                return DirectSum([other], [other.weight])
+            if other.n == 0:
+                return DirectSum([self], [self.weight])
                 
-                candidates = pair_multipy(self.partition,other.partition)
-                tuples = candidates.get_partitions()
-                n0s = candidates.n0s
-                pair_arr = []
-                if len(tuples)>0:
-                    pair_arr = [Pair(tuples[ind],inherited_N0=n0s[ind], Nc = Nc) for ind in range(len(n0s))]
+            candidates = pair_multipy(self.partition,other.partition)
+            tuples = candidates.get_partitions()
+            n0s = candidates.n0s
+            pair_arr = []
+            if len(tuples)>0:
+                pair_arr = [Pair(tuples[ind],inherited_N0=n0s[ind], Nc = Nc) for ind in range(len(n0s))]
         
-                return DirectSum(pair_arr,np.ones(len(pair_arr)))
+            return DirectSum(pair_arr,np.ones(len(pair_arr)))
             
-            elif type(other) is YoungDiagram:
+        elif type(other) is YoungDiagram:
             
-                if self.n==0:
-                    return DirectSum([other.pair_with(())], [other.weight])
-                if other.n ==0:
-                    return DirectSum([self], [self.weight])
+            if self.n==0:
+                return DirectSum([other.pair_with(())], [other.weight])
+            if other.n ==0:
+                return DirectSum([self], [self.weight])
                 
-                oth = other.pair_with(())
+            oth = other.pair_with(())
                 
-                candidates = pair_multipy(self.partition,oth.partition)
-                tuples = candidates.get_partitions()
-                n0s = candidates.n0s
-                pair_arr = []
-                if len(tuples)>0:
-                    pair_arr = [Pair(tuples[ind],inherited_N0=n0s[ind], Nc = Nc) for ind in range(len(n0s))]
+            candidates = pair_multipy(self.partition,oth.partition)
+            tuples = candidates.get_partitions()
+            n0s = candidates.n0s
+            pair_arr = []
+            if len(tuples)>0:
+                pair_arr = [Pair(tuples[ind],inherited_N0=n0s[ind], Nc = Nc) for ind in range(len(n0s))]
         
-                return DirectSum(pair_arr,np.ones(len(pair_arr)))
+            return DirectSum(pair_arr,np.ones(len(pair_arr)))
                 
-            elif type(other) is NullDiagram:
-                return NullDiagram()
+        elif type(other) is NullDiagram:
+            return NullDiagram()
                                 
-            else:
-                try:
-                    check_number = float(other)
+        else:
+            try:
+                check_number = float(other)
                     
-                    return DirectSum([self], [self.weight*other])
-                except Exception as e:
-                    raise NotImplemented
+                return DirectSum([self], [self.weight*other])
+            except Exception as e:
+                raise NotImplemented
                 
                 
     def __rmul__(self, other):
@@ -1046,11 +1044,11 @@ class Pair(YoungDiagram):
             br_part = r"[*(white)\bullet]{"+br_str+"}"
             
         if len(ubr_part)>0 and len(br_part)>0:
-            return "\ydiagram"+br_part+'*'+ubr_part
+            return r"\ydiagram"+br_part+'*'+ubr_part
         elif len(ubr_part)==0:
-            return "\ydiagram"+br_part
+            return r"\ydiagram"+br_part
         elif len(br_part)==0:
-            return "\ydiagram"+ubr_part
+            return r"\ydiagram"+ubr_part
             
     def as_ydiagram(self):
         return self._as_inner_ytab()
@@ -1088,67 +1086,66 @@ class Pair(YoungDiagram):
                 #warnings.warn('Diagram multiplication performed under specific Nc.')
         except exception as e:
             pass
-        finally:
-            if type(other) is Pair:
+        if type(other) is Pair:
                     
-                left = r'\left(\ '
-                right = r'\ \right)'
+            left = r'\left(\ '
+            right = r'\ \right)'
                 
-                other_array = enumerate_pair(other.partition)
+            other_array = enumerate_pair(other.partition)
                 
-                tot_string = self._as_inner_ytab()+ r'\,\otimes\,'+compose_ytab_from_array(other_array)
+            tot_string = self._as_inner_ytab()+ r'\,\otimes\,'+compose_ytab_from_array(other_array)
                 
-                candidates_in_steps = pair_multipy_verbosely(self.partition,other.partition)
+            candidates_in_steps = pair_multipy_verbosely(self.partition,other.partition)
                 
-                for ind in range(len(candidates_in_steps)):
+            for ind in range(len(candidates_in_steps)):
                 
-                    cand_str = candidates_in_steps[ind].string_list()
-                    leftover_arr = compose_ytab_from_array(other_array[:,1+ind:])
-                    if len(leftover_arr)>0:
-                        cand_str = left+cand_str+right+r'\,\otimes\,'+leftover_arr+r'\\'
-                    tot_string += r'&='+cand_str
+                cand_str = candidates_in_steps[ind].string_list()
+                leftover_arr = compose_ytab_from_array(other_array[:,1+ind:])
+                if len(leftover_arr)>0:
+                    cand_str = left+cand_str+right+r'\,\otimes\,'+leftover_arr+r'\\'
+                tot_string += r'&='+cand_str
                     
-                    if ind < len(candidates_in_steps)-1:
-                        tot_string +='\n'
+                if ind < len(candidates_in_steps)-1:
+                    tot_string +='\n'
                 
-                return tot_string
+            return tot_string
             
-            elif type(other) is YoungDiagram:
+        elif type(other) is YoungDiagram:
                 
-                oth = other.pair_with(())
+            oth = other.pair_with(())
                 
-                left = r'\left(\ '
-                right = r'\ \right)'
+            left = r'\left(\ '
+            right = r'\ \right)'
                 
-                other_array = enumerate_pair(oth.partition)
+            other_array = enumerate_pair(oth.partition)
                 
-                tot_string = self._as_inner_ytab()+ r'\,\otimes\,'+compose_ytab_from_array(other_array)
+            tot_string = self._as_inner_ytab()+ r'\,\otimes\,'+compose_ytab_from_array(other_array)
                 
-                candidates_in_steps = pair_multipy_verbosely(self.partition,oth.partition)
+            candidates_in_steps = pair_multipy_verbosely(self.partition,oth.partition)
                 
-                for ind in range(len(candidates_in_steps)):
+            for ind in range(len(candidates_in_steps)):
                 
-                    cand_str = candidates_in_steps[ind].string_list()
-                    leftover_arr = compose_ytab_from_array(other_array[:,1+ind:])
-                    if len(leftover_arr)>0:
-                        cand_str = left+cand_str+right+r'\,\otimes\,'+leftover_arr+r'\\'
-                    tot_string += r'&='+cand_str
+                cand_str = candidates_in_steps[ind].string_list()
+                leftover_arr = compose_ytab_from_array(other_array[:,1+ind:])
+                if len(leftover_arr)>0:
+                    cand_str = left+cand_str+right+r'\,\otimes\,'+leftover_arr+r'\\'
+                tot_string += r'&='+cand_str
                     
-                    if ind < len(candidates_in_steps)-1:
-                        tot_string +='\n'
+                if ind < len(candidates_in_steps)-1:
+                    tot_string +='\n'
                 
-                return tot_string
+            return tot_string
                 
-            elif type(other) is NullDiagram:
-                return('0')
+        elif type(other) is NullDiagram:
+            return('0')
                                 
-            else:
-                try:
-                    check_number = float(other)
+        else:
+            try:
+                check_number = float(other)
                     
-                    self.weight *= other
-                except Exception as e:
-                    print(e)
+                self.weight *= other
+            except Exception as e:
+                print(e)
         
     
 
@@ -1324,7 +1321,7 @@ class DirectSum:
             mult = str(int(multiplicities[ind]))
             
             if not '1_{' in el_str:
-                el_str = mult+r'_{'+str(N0)+'}\,'+el_str
+                el_str = mult+r'_{'+str(N0)+r'}\,'+el_str
             else:
                 el_str = el_str.replace('1_{', mult+r'_{')
                 
@@ -1509,10 +1506,10 @@ class DirectSum:
         multiplicities = self.multiplicities.astype(int)
         n0s = self.N0
 
-        lis = [str(multiplicities[ind])+r'_{'+str(n0s[ind])+'}\,'+elements[ind].as_ydiagram()
+        lis = [str(multiplicities[ind])+r'_{'+str(n0s[ind])+r'}\,'+elements[ind].as_ydiagram()
                 for ind in range(len(elements))]
     
-        return '\,\oplus\,'.join(lis)
+        return r'\,\oplus\,'.join(lis)
 
     def print(self, tex = False):
         strin = ''
