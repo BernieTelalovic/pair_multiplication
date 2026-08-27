@@ -13,14 +13,63 @@ The multiplication methods have been successfully numerically tested for all par
 
 ## Installation
 
-Install the package using `pip`:
+Using a virtual environment is recommended. It keeps the package and its build
+dependencies separate from the system Python installation.
+
+On Linux and macOS:
 
 ```bash
-pip install --no-binary :all: --no-build-isolation git+https://github.com/BernieTelalovic/pair_multiplication.git
-
-
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install "git+https://github.com/BernieTelalovic/pair_multiplication.git"
 ```
 
+On Windows PowerShell:
+
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install "git+https://github.com/BernieTelalovic/pair_multiplication.git"
+```
+
+The package includes a Cython extension, so installation requires a working C
+compiler and Python development headers. Pip installs the other build
+dependencies declared in `pyproject.toml` automatically.
+
+Do not add `--no-build-isolation` unless `setuptools`, `wheel`, `Cython`, and
+`numpy` are already installed in the active environment. The
+`--no-binary :all:` option is unnecessary for a Git installation and also
+forces dependencies such as NumPy and SciPy to be compiled from source.
+
+### Development installation and tests
+
+To work on the source code, clone the repository and install it in editable
+mode:
+
+```bash
+git clone https://github.com/BernieTelalovic/pair_multiplication.git
+cd pair_multiplication
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -e .
+```
+
+Run the test suite from the repository root:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+If an import reports that `pair_multiplication.cutils_pair_multiplication` is
+missing, build the extension in place and retry the tests:
+
+```bash
+python setup.py build_ext --inplace
+python -m unittest discover -s tests -v
+```
 
 ```python
 from pair_multiplication import *
